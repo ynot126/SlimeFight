@@ -1,9 +1,10 @@
+#nullable enable
 using System.Collections.Generic;
 using UnityEngine;
 
 public class SingletonSpawner : MonoBehaviour
 {
-    [SerializeField] List<GameObject> singletonPrefabs;
+    [SerializeField] List<GameObject> singletonPrefabs = null!;
 
     public void Initialize()
     {

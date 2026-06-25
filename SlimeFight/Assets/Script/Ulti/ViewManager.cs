@@ -5,9 +5,9 @@ using System.Collections.Generic;
 public class ViewManager : Singleton<ViewManager>
 {
     
-    [SerializeField] private Transform _viewContainer;
+    [SerializeField] Transform _viewContainer;
 
-    private readonly Stack<BaseView> _viewStack = new Stack<BaseView>();
+    readonly Stack<BaseView> _viewStack = new Stack<BaseView>();
 
     public BaseView TopView => _viewStack.Count > 0 ? _viewStack.Peek() : null;
     public int StackCount => _viewStack.Count;
