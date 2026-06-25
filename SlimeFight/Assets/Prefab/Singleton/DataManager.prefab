@@ -44,3 +44,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b2135495b5cffc43a0669ddb9138360, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  testingGameData:
+    playerCharacters:
+    - maxHealth: 100
+    - maxHealth: 100
+    enemyCharacters: []

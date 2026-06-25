@@ -15,6 +15,6 @@ public class DataManager : Singleton<DataManager>
 [Serializable]
 public class GameData
 {
-    public List<Character> playerCharacters = new List<Character>();
-    public List<Character> enemyCharacters = new List<Character>();
+    public List<CharacterData> playerCharacters = new List<CharacterData>();
+    public List<CharacterData> enemyCharacters = new List<CharacterData>();
 }

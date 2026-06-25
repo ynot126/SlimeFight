@@ -1,4 +1,5 @@
 #nullable enable
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class GameDrive : MonoBehaviour
@@ -19,6 +20,7 @@ public class GameDrive : MonoBehaviour
     void Start()
     {
         Initialize();
+        StartAsync().Forget();
     }
 
     void Initialize()
@@ -35,6 +37,12 @@ public class GameDrive : MonoBehaviour
         mapManager.Initialize(gameData);
         
         characterManager = Instantiate(characterManagerPrefab);
-        characterManager.Initialize(gameData);
+        characterManager.Initialize(gameData , mapManager);
+    }
+
+    async UniTask StartAsync()
+    {
+        await mapManager.CreateMap();
+        await characterManager.SpawnCharacter();
     }
 }
