@@ -1,7 +1,5 @@
 #nullable enable
 using System;
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,10 +9,14 @@ public class GameView : BaseView
     [SerializeField] CanvasGroup characterActionGroup= null!;
     [SerializeField] Button moveButton = null!;
     
+    [Header("Other UI")]
+    [SerializeField] Button endTurnButton = null!;
     public event Action? OnMoveButtonPressed;
+    public event Action? OnEndTurnButtonPressed;
     public void Initialize()
     {
         moveButton.onClick.AddListener(() => OnMoveButtonPressed?.Invoke());
+        endTurnButton.onClick.AddListener(() => OnEndTurnButtonPressed?.Invoke());
     }
 
     public void SetShowCharacterActionOption(bool val)

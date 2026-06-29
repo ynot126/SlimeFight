@@ -21,4 +21,11 @@ public class MapManager : MonoBehaviour
         var y = Random.Range(-5f, 5f);
         return new Vector2(x, y);
     }
+
+    public bool isPositionOutMap(Vector2 position)
+    {
+        if (position.x is > -5 and < 5 && position.y is > -5 and < 5)
+            return true;
+        else return false;
+    }
 }

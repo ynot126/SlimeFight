@@ -48,5 +48,10 @@ public class CharacterManager : MonoBehaviour
         characters[runTimeId] = character;
         character.OnDeath += () => characters.Remove(runTimeId);
     }
+
+    public void CharacterMoveToPosition(int runTimeId, Vector2 position)
+    {
+        characters[runTimeId].transform.position = position;
+    }
 }
     

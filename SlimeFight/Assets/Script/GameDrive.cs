@@ -26,7 +26,12 @@ public class GameDrive : MonoBehaviour
     GameView gameView = null!;
     
     // cts
-    UniTaskCompletionSource characterActionTask = null!;
+    UniTaskCompletionSource characterSelectActionTask = null!;
+    UniTaskCompletionSource characterActionTargetSelectionTask = null!;
+    bool isEndTurnButtonClicked;
+    
+    // action data
+    Vector2 actionTargetPosition = Vector2.zero;
     void Start()
     {
         Initialize();
@@ -82,31 +87,62 @@ public class GameDrive : MonoBehaviour
 
     async UniTask CharacterTurn(int runTimeID)
     {
-        characterActionTask = new UniTaskCompletionSource();
         
         // set the function
         gameView.SetShowCharacterActionOption(true);
-        gameView.OnMoveButtonPressed += HandleGameViewMovementButtonPressed;
         inputManager.OnMousePositionUpdate += HandleMousePositionUpdate;
         characterManager.SetCharacterReadyAction(true,runTimeID);
-        
-        await characterActionTask.Task; 
+
+        isEndTurnButtonClicked = false;
+        gameView.OnEndTurnButtonPressed += HandleEndTurnButtonPressed;
+        while (!isEndTurnButtonClicked)
+        {
+            
+            characterSelectActionTask = new UniTaskCompletionSource();
+            gameView.OnMoveButtonPressed += HandleGameViewMovementButtonPressed;
+            await characterSelectActionTask.Task;
+            inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
+
+            if (isEndTurnButtonClicked) break;
+            
+            characterActionTargetSelectionTask = new UniTaskCompletionSource();
+            inputManager.OnMouseClick += HandleMouseOnClick;
+            await characterActionTargetSelectionTask.Task;
+            inputManager.OnMouseClick -= HandleMouseOnClick;
+
+            if (isEndTurnButtonClicked) break;
+            
+            characterManager.CharacterMoveToPosition(runTimeID, actionTargetPosition);
+        }
+        gameView.OnEndTurnButtonPressed -= HandleEndTurnButtonPressed;
         
         // clean up
-        inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
         gameView.OnMoveButtonPressed -= HandleGameViewMovementButtonPressed;
         characterManager.SetCharacterReadyAction(false,runTimeID);
         gameView.SetShowCharacterActionOption(false);
     }
-
+    
     void HandleGameViewMovementButtonPressed()
     {
-        
+        characterSelectActionTask.TrySetResult();
     }
 
     void HandleMousePositionUpdate(Vector2 mousePosition)
     {
         
+    }
+
+    void HandleMouseOnClick(Vector2 mousePosition)
+    {
+        actionTargetPosition = mousePosition;
+        characterActionTargetSelectionTask.TrySetResult();
+    }
+
+    void HandleEndTurnButtonPressed()
+    {
+        isEndTurnButtonClicked = true;
+        characterSelectActionTask.TrySetResult();
+        characterActionTargetSelectionTask.TrySetResult();
     }
     # region GameView
     GameView CreateGameView()
