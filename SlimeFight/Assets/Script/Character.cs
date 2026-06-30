@@ -11,10 +11,14 @@ public class Character : MonoBehaviour
     int currentHealth;
     int maxHealth;
     int speed;
+    int attackPower;
     
     // public field data
     public int RunTimeId => runTimeId;
     public int Speed => speed;
+    public CharacterType Type => type;
+    public int AttackPower => attackPower;
+    public Vector2 Position => transform.position;
     
     // event function
     public event Action? OnDeath;
@@ -24,6 +28,7 @@ public class Character : MonoBehaviour
         maxHealth = characterData.maxHealth;
         currentHealth = maxHealth;
         speed = characterData.speed;
+        attackPower = characterData.attackPower;
         runTimeId = aRunTimeID;
         
         type = characterData.type;
@@ -58,4 +63,5 @@ public class CharacterData
     public CharacterType type;
     public int maxHealth = -1;
     public int speed = -1;
+    public int attackPower = 1;
 }

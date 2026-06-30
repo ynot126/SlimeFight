@@ -7,6 +7,7 @@ public class InputManager : MonoBehaviour
 {
    public event Action<Vector2>? OnMousePositionUpdate;
    public event Action<Vector2>? OnMouseClick;
+   public Vector2 CurrentMousePosition { get; private set; }
    Camera mainCamera = null!;
    public void Initialize(Camera aMainCamera)
    {
@@ -17,6 +18,7 @@ public class InputManager : MonoBehaviour
    {
       if (EventSystem.current.IsPointerOverGameObject()) return;
       var worldMousePosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+      CurrentMousePosition = worldMousePosition;
       OnMousePositionUpdate?.Invoke(worldMousePosition);
 
       if (Input.GetMouseButtonDown(0))

@@ -10,6 +10,7 @@ public class CharacterManager : MonoBehaviour
     [SerializeField] Transform CharacterParent = null!;
     [SerializeField] Character characterPrefab = null!;
     [SerializeField] float moveSpeed = 5f;
+    [SerializeField] float characterSelectionRadius = 0.75f;
 
     Dictionary<int, Character> characters = new Dictionary<int, Character>();
     
@@ -61,6 +62,37 @@ public class CharacterManager : MonoBehaviour
 
         var duration = distance / moveSpeed;
         await characterTransform.DOMove(end, duration).SetEase(Ease.Linear).ToUniTask();
+    }
+
+    public bool TryGetCharacterAtPosition(Vector2 position, int excludeRunTimeId, out Character character)
+    {
+        character = null!;
+        var closestDistance = characterSelectionRadius;
+        foreach (var candidate in characters.Values)
+        {
+            if (candidate.RunTimeId == excludeRunTimeId) continue;
+            var distance = Vector2.Distance(candidate.Position, position);
+            if (distance >= closestDistance) continue;
+            closestDistance = distance;
+            character = candidate;
+        }
+
+        return character != null;
+    }
+
+    public bool IsValidAttackTarget(int attackerRunTimeId, int targetRunTimeId)
+    {
+        if (!characters.TryGetValue(attackerRunTimeId, out var attacker)) return false;
+        if (!characters.TryGetValue(targetRunTimeId, out var target)) return false;
+        return attacker.Type != target.Type;
+    }
+
+    public void CharacterAttack(int attackerRunTimeId, int targetRunTimeId)
+    {
+        if (!IsValidAttackTarget(attackerRunTimeId, targetRunTimeId)) return;
+        var attacker = characters[attackerRunTimeId];
+        var target = characters[targetRunTimeId];
+        target.TakeDamage(attacker.AttackPower);
     }
 }
     

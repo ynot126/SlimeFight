@@ -22,10 +22,8 @@ public class MapManager : MonoBehaviour
         return new Vector2(x, y);
     }
 
-    public bool isPositionOutMap(Vector2 position)
+    public bool IsPositionOnMap(Vector2 position)
     {
-        if (position.x is > -5 and < 5 && position.y is > -5 and < 5)
-            return true;
-        else return false;
+        return position.x is > -5 and < 5 && position.y is > -5 and < 5;
     }
 }

@@ -246,6 +246,7 @@ MonoBehaviour:
   inputManagerPrefab: {fileID: 2433529920767192668, guid: 3ade55f784ae10744b244cef409ee9f5, type: 3}
   mapManagerPrefab: {fileID: 2549260085491250892, guid: bc1104d8bbe0d3149b2b1173942c4feb, type: 3}
   characterManagerPrefab: {fileID: 21101330874026847, guid: 9b9b969ff7799254e9a43f9afc57469f, type: 3}
+  characterActionManagerPrefab: {fileID: 4605018536873302299, guid: b2e4f6a8c1d34e5f9a0b1c2d3e4f5a67, type: 3}
   gameViewPrefab: {fileID: 4956975567292843969, guid: 5e04beb77de3c324392995a26a2c8f6e, type: 3}
 --- !u!1 &1663568409
 GameObject:
