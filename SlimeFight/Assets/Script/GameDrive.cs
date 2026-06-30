@@ -112,7 +112,7 @@ public class GameDrive : MonoBehaviour
 
             if (isEndTurnButtonClicked) break;
             
-            characterManager.CharacterMoveToPosition(runTimeID, actionTargetPosition);
+            await characterManager.CharacterMoveToPosition(runTimeID, actionTargetPosition);
         }
         gameView.OnEndTurnButtonPressed -= HandleEndTurnButtonPressed;
         
@@ -144,6 +144,7 @@ public class GameDrive : MonoBehaviour
         characterSelectActionTask.TrySetResult();
         characterActionTargetSelectionTask.TrySetResult();
     }
+    
     # region GameView
     GameView CreateGameView()
     {

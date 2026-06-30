@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using UnityEngine;
 
 public class CharacterManager : MonoBehaviour
 {
     [SerializeField] Transform CharacterParent = null!;
     [SerializeField] Character characterPrefab = null!;
+    [SerializeField] float moveSpeed = 5f;
 
     Dictionary<int, Character> characters = new Dictionary<int, Character>();
     
@@ -49,9 +51,16 @@ public class CharacterManager : MonoBehaviour
         character.OnDeath += () => characters.Remove(runTimeId);
     }
 
-    public void CharacterMoveToPosition(int runTimeId, Vector2 position)
+    public async UniTask CharacterMoveToPosition(int runTimeId, Vector2 position)
     {
-        characters[runTimeId].transform.position = position;
+        var characterTransform = characters[runTimeId].transform;
+        var start = characterTransform.position;
+        var end = new Vector3(position.x, position.y, start.z);
+        var distance = Vector2.Distance(start, end);
+        if (distance <= Mathf.Epsilon) return;
+
+        var duration = distance / moveSpeed;
+        await characterTransform.DOMove(end, duration).SetEase(Ease.Linear).ToUniTask();
     }
 }
     
