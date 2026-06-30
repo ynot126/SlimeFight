@@ -46,6 +46,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   testingGameData:
     playerCharacters:
-    - maxHealth: 100
-    - maxHealth: 100
+    - type: 1
+      maxHealth: 100
+      speed: -1
+      attackPower: 1
+    - type: 2
+      maxHealth: 100
+      speed: -1
+      attackPower: 1
     enemyCharacters: []

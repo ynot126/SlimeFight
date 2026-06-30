@@ -8,22 +8,30 @@ public enum CharacterActionType
     Attack,
 }
 
+public enum CharacterTurnState
+{
+    Inactive,
+    PlanningAction,
+    ExecutingAction,
+}
+
 public class CharacterActionManager : MonoBehaviour
 {
     CharacterManager characterManager = null!;
     MapManager mapManager = null!;
     InputManager inputManager = null!;
 
-    UniTaskCompletionSource chooseActionTask = null!;
-    UniTaskCompletionSource selectTargetTask = null!;
+    CharacterTurnState currentState = CharacterTurnState.Inactive;
+    UniTaskCompletionSource? stateCompletionSource;
     bool isEndTurnRequested;
 
     CharacterActionType selectedAction;
+    bool hasSelectedAction;
     Vector2 moveTargetPosition;
     int attackTargetRunTimeId;
 
     int activeCharacterRunTimeId;
-    GameView activeGameView= null!;
+    GameView activeGameView = null!;
 
     public void Initialize(CharacterManager aCharacterManager, MapManager aMapManager, InputManager aInputManager)
     {
@@ -34,54 +42,93 @@ public class CharacterActionManager : MonoBehaviour
 
     public async UniTask RunCharacterTurn(int runTimeId, GameView gameView)
     {
-        activeCharacterRunTimeId = runTimeId;
-        activeGameView = gameView;
-
-        gameView.SetShowCharacterActionOption(true);
-        characterManager.SetCharacterReadyAction(true, runTimeId);
-        isEndTurnRequested = false;
-
-        gameView.OnEndTurnButtonPressed += HandleEndTurnButtonPressed;
+        BeginTurn(runTimeId, gameView);
 
         while (!isEndTurnRequested)
         {
-            await ChooseActionPhase();
+            await RunState(CharacterTurnState.PlanningAction);
             if (isEndTurnRequested) break;
 
-            await SelectTargetPhase();
-            if (isEndTurnRequested) break;
-
-            await ExecuteActionPhase();
+            await RunState(CharacterTurnState.ExecutingAction);
         }
 
-        gameView.OnEndTurnButtonPressed -= HandleEndTurnButtonPressed;
-        activeGameView.OnMoveButtonPressed -= HandleMoveButtonPressed;
-        activeGameView.OnAttackButtonPressed -= HandleAttackButtonPressed;
+        EndTurn(runTimeId, gameView);
+    }
+
+    void BeginTurn(int runTimeId, GameView gameView)
+    {
+        activeCharacterRunTimeId = runTimeId;
+        activeGameView = gameView;
+        isEndTurnRequested = false;
+        hasSelectedAction = false;
+
+        gameView.SetShowCharacterActionOption(true);
+        characterManager.SetCharacterReadyAction(true, runTimeId);
+        activeGameView.OnEndTurnButtonPressed += HandleEndTurnButtonPressed;
+    }
+
+    void EndTurn(int runTimeId, GameView gameView)
+    {
+        activeGameView.OnEndTurnButtonPressed -= HandleEndTurnButtonPressed;
         characterManager.SetCharacterReadyAction(false, runTimeId);
         gameView.SetShowCharacterActionOption(false);
 
-        activeGameView = null;
+        activeCharacterRunTimeId = 0;
+        activeGameView = null!;
+        currentState = CharacterTurnState.Inactive;
+        hasSelectedAction = false;
     }
 
-    async UniTask ChooseActionPhase()
+    async UniTask RunState(CharacterTurnState state)
     {
-        chooseActionTask = new UniTaskCompletionSource();
-        activeGameView.OnMoveButtonPressed += HandleMoveButtonPressed;
-        activeGameView.OnAttackButtonPressed += HandleAttackButtonPressed;
-        await chooseActionTask.Task;
-        activeGameView.OnMoveButtonPressed -= HandleMoveButtonPressed;
-        activeGameView.OnAttackButtonPressed -= HandleAttackButtonPressed;
+        currentState = state;
+        OnStateEnter(state);
+
+        if (state == CharacterTurnState.ExecutingAction)
+        {
+            await ExecuteSelectedAction();
+        }
+        else
+        {
+            stateCompletionSource = new UniTaskCompletionSource();
+            await stateCompletionSource.Task;
+            stateCompletionSource = null;
+        }
+
+        OnStateExit(state);
+        currentState = CharacterTurnState.Inactive;
     }
 
-    async UniTask SelectTargetPhase()
+    void OnStateEnter(CharacterTurnState state)
     {
-        selectTargetTask = new UniTaskCompletionSource();
-        inputManager.OnMouseClick += HandleMouseClick;
-        await selectTargetTask.Task;
-        inputManager.OnMouseClick -= HandleMouseClick;
+        switch (state)
+        {
+            case CharacterTurnState.PlanningAction:
+                activeGameView.OnMoveButtonPressed += HandleMoveButtonPressed;
+                activeGameView.OnAttackButtonPressed += HandleAttackButtonPressed;
+                inputManager.OnMouseClick += HandleMouseClick;
+                break;
+        }
     }
 
-    async UniTask ExecuteActionPhase()
+    void OnStateExit(CharacterTurnState state)
+    {
+        switch (state)
+        {
+            case CharacterTurnState.PlanningAction:
+                activeGameView.OnMoveButtonPressed -= HandleMoveButtonPressed;
+                activeGameView.OnAttackButtonPressed -= HandleAttackButtonPressed;
+                inputManager.OnMouseClick -= HandleMouseClick;
+                break;
+        }
+    }
+
+    void CompleteCurrentState()
+    {
+        stateCompletionSource?.TrySetResult();
+    }
+
+    async UniTask ExecuteSelectedAction()
     {
         switch (selectedAction)
         {
@@ -95,32 +142,40 @@ public class CharacterActionManager : MonoBehaviour
         }
     }
 
+    void SelectAction(CharacterActionType action)
+    {
+        if (currentState != CharacterTurnState.PlanningAction) return;
+
+        selectedAction = action;
+        hasSelectedAction = true;
+    }
+
     void HandleMoveButtonPressed()
     {
-        selectedAction = CharacterActionType.Move;
-        chooseActionTask.TrySetResult();
+        SelectAction(CharacterActionType.Move);
     }
 
     void HandleAttackButtonPressed()
     {
-        selectedAction = CharacterActionType.Attack;
-        chooseActionTask.TrySetResult();
+        SelectAction(CharacterActionType.Attack);
     }
 
     void HandleMouseClick(Vector2 mousePosition)
     {
+        if (currentState != CharacterTurnState.PlanningAction || !hasSelectedAction) return;
+
         switch (selectedAction)
         {
             case CharacterActionType.Move:
                 if (!mapManager.IsPositionOnMap(mousePosition)) return;
                 moveTargetPosition = mousePosition;
-                selectTargetTask.TrySetResult();
+                CompleteCurrentState();
                 break;
             case CharacterActionType.Attack:
                 if (!characterManager.TryGetCharacterAtPosition(mousePosition, activeCharacterRunTimeId, out var target)) return;
                 if (!characterManager.IsValidAttackTarget(activeCharacterRunTimeId, target.RunTimeId)) return;
                 attackTargetRunTimeId = target.RunTimeId;
-                selectTargetTask.TrySetResult();
+                CompleteCurrentState();
                 break;
         }
     }
@@ -128,7 +183,6 @@ public class CharacterActionManager : MonoBehaviour
     void HandleEndTurnButtonPressed()
     {
         isEndTurnRequested = true;
-        chooseActionTask.TrySetResult();
-        selectTargetTask.TrySetResult();
+        CompleteCurrentState();
     }
 }
