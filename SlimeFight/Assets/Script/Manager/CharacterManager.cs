@@ -18,10 +18,30 @@ public class CharacterManager : MonoBehaviour
     
     GameData gameData = null!;
     MapManager mapManager = null!;
-    public void Initialize(GameData aGameData, MapManager aMapManager)
+    InputManager inputManager = null!;
+    Character? hoveredCharacter;
+
+    public void Initialize(GameData aGameData, MapManager aMapManager, InputManager aInputManager)
     {
         gameData = aGameData;
         mapManager = aMapManager;
+        inputManager = aInputManager;
+        inputManager.OnMousePositionUpdate += HandleMousePositionUpdate;
+    }
+
+    void OnDestroy()
+    {
+        inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
+    }
+
+    void HandleMousePositionUpdate(Vector2 position)
+    {
+        Character? newHovered = TryGetCharacterAtPosition(position, -1, out var character) ? character : null;
+        if (newHovered == hoveredCharacter) return;
+
+        hoveredCharacter?.SetStatusCanvasVisible(false);
+        hoveredCharacter = newHovered;
+        hoveredCharacter?.SetStatusCanvasVisible(true);
     }
 
     public async UniTask SpawnCharacter()
@@ -49,7 +69,11 @@ public class CharacterManager : MonoBehaviour
         var character = Instantiate(characterPrefab, randomPosition, Quaternion.identity, CharacterParent);
         character.Initialize(data , runTimeId);
         characters[runTimeId] = character;
-        character.OnDeath += () => characters.Remove(runTimeId);
+        character.OnDeath += () =>
+        {
+            if (hoveredCharacter == character) hoveredCharacter = null;
+            characters.Remove(runTimeId);
+        };
     }
 
     public async UniTask CharacterMoveToPosition(int runTimeId, Vector2 position)

@@ -329,6 +329,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   characterActionGroup: {fileID: 3852174027535325450}
   moveButton: {fileID: 3492618590358080924}
+  attackButton: {fileID: 5246317349664129282}
   endTurnButton: {fileID: 1285344689997035184}
 --- !u!1 &2279894649123954628
 GameObject:

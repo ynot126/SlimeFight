@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class Character : MonoBehaviour
 {
+    [SerializeField] Transform statusCanvasContainer = null!;
+    [SerializeField] CharacterStatusCanvas characterStatusCanvasPrefab = null!;
     [SerializeField] SpriteRenderer spriteRenderer = null!;
     // character data
     CharacterType type;
@@ -19,9 +21,14 @@ public class Character : MonoBehaviour
     public CharacterType Type => type;
     public int AttackPower => attackPower;
     public Vector2 Position => transform.position;
+    public int CurrentHealth => currentHealth;
+    public int MaxHealth => maxHealth;
     
     // event function
     public event Action? OnDeath;
+    
+    // UI
+    CharacterStatusCanvas characterStatusCanvas = null!;
     
     public void Initialize(CharacterData characterData, int aRunTimeID)
     {
@@ -30,8 +37,11 @@ public class Character : MonoBehaviour
         speed = characterData.speed;
         attackPower = characterData.attackPower;
         runTimeId = aRunTimeID;
-        
         type = characterData.type;
+        
+        characterStatusCanvas = Instantiate(characterStatusCanvasPrefab , statusCanvasContainer);
+        characterStatusCanvas.Initialize(this);
+        characterStatusCanvas.SetVisible(false);
     }
 
     public void TakeDamage(int damage)
@@ -49,6 +59,12 @@ public class Character : MonoBehaviour
     public void SetCharacterReadyAction(bool val)
     {
         spriteRenderer.color = val ? Color.red : Color.white;
+    }
+
+    public void SetStatusCanvasVisible(bool val)
+    {
+        characterStatusCanvas.SetVisible(val);
+        if (val) characterStatusCanvas.UpdateStatus();
     }
 }
 
