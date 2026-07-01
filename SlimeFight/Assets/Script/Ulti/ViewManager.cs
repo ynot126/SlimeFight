@@ -54,4 +54,20 @@ public class ViewManager : Singleton<ViewManager>
             newTop.OnEnterForeground();
         }
     }
+
+    /// <summary>
+    /// Removes all views from the stack without restoring a previous top view.
+    /// Call before switching scenes so the persistent ViewManager does not retain stale references.
+    /// </summary>
+    public void ClearStack()
+    {
+        int clearedCount = _viewStack.Count;
+        while (_viewStack.Count > 0)
+        {
+            BaseView view = _viewStack.Pop();
+            if (view)
+                view.OnDismiss();
+        }
+        Debug.Log($"[ViewManager] Cleared stack ({clearedCount} view(s)).");
+    }
 }

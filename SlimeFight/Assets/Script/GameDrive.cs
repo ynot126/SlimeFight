@@ -4,13 +4,15 @@ using UnityEngine;
 
 public class GameDrive : MonoBehaviour
 {
-    [Header("Managers")] [SerializeField] SingletonSpawner singletonSpawnerPrefab = null!;
+    [Header("Managers")] 
+    [SerializeField] SingletonSpawner singletonSpawnerPrefab = null!;
     [SerializeField] InputManager inputManagerPrefab = null!;
     [SerializeField] MapManager mapManagerPrefab = null!;
     [SerializeField] CharacterManager characterManagerPrefab = null!;
     [SerializeField] CharacterActionManager characterActionManagerPrefab = null!;
 
-    [Header("Views")] [SerializeField] GameView gameViewPrefab = null!;
+    [Header("Views")] 
+    [SerializeField] GameView gameViewPrefab = null!;
 
 
     // Managers
