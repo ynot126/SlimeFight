@@ -64,7 +64,7 @@ public class CharacterManager : MonoBehaviour
         characters[runTimeId].SetCharacterReadyAction(val);
     }
 
-    public IReadOnlyList<CharacterActionType> GetCharacterActions(int runTimeId)
+    public IReadOnlyList<string> GetCharacterActions(int runTimeId)
         => characters[runTimeId].Actions;
 
     public void RefillMana(int runTimeId) => characters[runTimeId].RefillMana();
@@ -124,12 +124,23 @@ public class CharacterManager : MonoBehaviour
         return attacker.Type != target.Type;
     }
 
-    public void CharacterAttack(int attackerRunTimeId, int targetRunTimeId)
+    public void DealDamage(int targetRunTimeId, int damage)
     {
-        if (!IsValidAttackTarget(attackerRunTimeId, targetRunTimeId)) return;
-        var attacker = characters[attackerRunTimeId];
-        var target = characters[targetRunTimeId];
-        target.TakeDamage(attacker.AttackPower);
+        if (!characters.TryGetValue(targetRunTimeId, out var target)) return;
+        target.TakeDamage(damage);
+    }
+
+    public bool IsWithinRange(int sourceRunTimeId, int targetRunTimeId, float range)
+    {
+        if (!characters.TryGetValue(sourceRunTimeId, out var source)) return false;
+        if (!characters.TryGetValue(targetRunTimeId, out var target)) return false;
+        return Vector2.Distance(source.Position, target.Position) <= range;
+    }
+
+    public bool IsWithinRange(int sourceRunTimeId, Vector2 position, float range)
+    {
+        if (!characters.TryGetValue(sourceRunTimeId, out var source)) return false;
+        return Vector2.Distance(source.Position, position) <= range;
     }
 }
     

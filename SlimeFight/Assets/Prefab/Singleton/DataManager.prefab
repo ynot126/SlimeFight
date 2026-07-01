@@ -51,11 +51,15 @@ MonoBehaviour:
       speed: 1
       attackPower: 1
       maxMana: 3
-      actions: 0000000001000000
+      actionIds:
+      - move
+      - strike
     - type: 2
       maxHealth: 100
       speed: 0
       attackPower: 1
       maxMana: 3
-      actions: 0000000001000000
+      actionIds:
+      - move
+      - strike
     enemyCharacters: []

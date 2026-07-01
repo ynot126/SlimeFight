@@ -1,6 +1,5 @@
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -61,8 +60,8 @@ public class CharacterActionManager : MonoBehaviour
         characterManager.RefillMana(runTimeId);
         UpdateManaDisplay(runTimeId);
 
-        foreach (var actionType in characterManager.GetCharacterActions(runTimeId))
-            availableActions.Add(CreateAction(actionType, runTimeId));
+        foreach (var actionId in characterManager.GetCharacterActions(runTimeId))
+            availableActions.Add(CreateAction(actionId, runTimeId));
 
         gameView.SpawnActionButtons(availableActions, SelectAction);
         gameView.SetShowCharacterActionOption(true);
@@ -171,12 +170,8 @@ public class CharacterActionManager : MonoBehaviour
         activeGameView.UpdateActionButtonAffordability(characterManager.GetCurrentMana(activeCharacterRunTimeId));
     }
 
-    CharacterAction CreateAction(CharacterActionType type, int runTimeId) => type switch
-    {
-        CharacterActionType.Move => new MoveAction(characterManager, mapManager, runTimeId),
-        CharacterActionType.Attack => new AttackAction(characterManager, mapManager, runTimeId),
-        _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
-    };
+    CharacterAction CreateAction(string actionId, int runTimeId)
+        => new CharacterAction(ActionLibrary.GetAction(actionId), characterManager, mapManager, runTimeId);
 
     void HandleMouseClick(Vector2 mousePosition)
     {

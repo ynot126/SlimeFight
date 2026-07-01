@@ -2,40 +2,39 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-public enum CharacterActionType
+public class CharacterAction
 {
-    Move,
-    Attack,
-}
+    readonly ActionData data;
+    readonly ActionContext context;
 
-public abstract class CharacterAction
-{
-    public virtual string ActionName => "ActionName";
-    protected CharacterManager CharacterManager { get; }
-    protected MapManager MapManager { get; }
-    protected int ActiveCharacterRunTimeId { get; }
+    public string ActionName => data.Id;
+    public int ManaCost => data.ManaCost;
+    public bool HasSelectedTarget { get; private set; }
+    public Vector2 TargetPosition => selectedTarget.Position;
 
-    protected CharacterAction(CharacterManager characterManager, MapManager mapManager, int activeCharacterRunTimeId)
+    ActionTarget selectedTarget;
+
+    public CharacterAction(ActionData actionData, CharacterManager characterManager, MapManager mapManager, int activeCharacterRunTimeId)
     {
-        CharacterManager = characterManager;
-        MapManager = mapManager;
-        ActiveCharacterRunTimeId = activeCharacterRunTimeId;
+        data = actionData;
+        context = new ActionContext(characterManager, mapManager, activeCharacterRunTimeId);
     }
-
-    public abstract CharacterActionType ActionType { get; }
-    public abstract int ManaCost { get; }
-    public bool HasSelectedTarget { get; protected set; }
-    protected Vector2 TargetPosition { get; set; }
 
     public void Reset()
     {
         HasSelectedTarget = false;
-        TargetPosition = default;
-        OnReset();
+        selectedTarget = default;
     }
 
-    protected virtual void OnReset() { }
+    public bool TrySelectTarget(Vector2 mousePosition)
+    {
+        if (!data.TargetStrategy.TrySelectTarget(context, mousePosition, out var target))
+            return false;
 
-    public abstract bool TrySelectTarget(Vector2 mousePosition);
-    public abstract UniTask ExecuteAsync();
+        selectedTarget = target;
+        HasSelectedTarget = true;
+        return true;
+    }
+
+    public UniTask ExecuteAsync() => data.Execution.ExecuteAsync(context, selectedTarget);
 }

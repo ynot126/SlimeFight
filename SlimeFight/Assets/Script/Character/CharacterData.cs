@@ -9,5 +9,5 @@ public class CharacterData
     public int speed = -1;
     public int attackPower = 1;
     public int maxMana = -1;
-    public List<CharacterActionType> actions = new();
+    public List<string> actionIds = new();
 }

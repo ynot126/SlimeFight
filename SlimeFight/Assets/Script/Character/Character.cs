@@ -18,7 +18,7 @@ public class Character : MonoBehaviour
     int maxMana;
     int speed;
     int attackPower;
-    List<CharacterActionType> actions = new();
+    List<string> actions = new();
     
     // public field data
     public int RunTimeId => runTimeId;
@@ -30,7 +30,7 @@ public class Character : MonoBehaviour
     public int MaxHealth => maxHealth;
     public int CurrentMana => currentMana;
     public int MaxMana => maxMana;
-    public IReadOnlyList<CharacterActionType> Actions => actions;
+    public IReadOnlyList<string> Actions => actions;
     
     // event function
     public event Action? OnDeath;
@@ -48,7 +48,7 @@ public class Character : MonoBehaviour
         attackPower = characterData.attackPower;
         runTimeId = aRunTimeID;
         type = characterData.type;
-        actions = new List<CharacterActionType>(characterData.actions);
+        actions = new List<string>(characterData.actionIds);
         
         characterStatusCanvas = Instantiate(characterStatusCanvasPrefab , statusCanvasContainer);
         characterStatusCanvas.Initialize(this);
