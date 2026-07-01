@@ -10,6 +10,7 @@ public enum CharacterActionType
 
 public abstract class CharacterAction
 {
+    public virtual string ActionName => "ActionName";
     protected CharacterManager CharacterManager { get; }
     protected MapManager MapManager { get; }
     protected int ActiveCharacterRunTimeId { get; }

@@ -1,4 +1,7 @@
 #nullable enable
+
+using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -19,8 +22,7 @@ public class CharacterActionManager : MonoBehaviour
     UniTaskCompletionSource? stateCompletionSource;
     bool isEndTurnRequested;
 
-    MoveAction moveAction = null!;
-    AttackAction attackAction = null!;
+    readonly List<CharacterAction> availableActions = new();
     CharacterAction? selectedAction;
 
     int activeCharacterRunTimeId;
@@ -54,10 +56,12 @@ public class CharacterActionManager : MonoBehaviour
         activeGameView = gameView;
         isEndTurnRequested = false;
         selectedAction = null;
+        availableActions.Clear();
 
-        moveAction = new MoveAction(characterManager, mapManager, runTimeId);
-        attackAction = new AttackAction(characterManager, mapManager, runTimeId);
+        foreach (var actionType in characterManager.GetCharacterActions(runTimeId))
+            availableActions.Add(CreateAction(actionType, runTimeId));
 
+        gameView.SpawnActionButtons(availableActions, SelectAction);
         gameView.SetShowCharacterActionOption(true);
         UpdateActionButtonSelection();
         characterManager.SetCharacterReadyAction(true, runTimeId);
@@ -68,7 +72,9 @@ public class CharacterActionManager : MonoBehaviour
     {
         activeGameView.OnEndTurnButtonPressed -= HandleEndTurnButtonPressed;
         characterManager.SetCharacterReadyAction(false, runTimeId);
+        gameView.ClearActionButtons();
         gameView.SetShowCharacterActionOption(false);
+        availableActions.Clear();
 
         activeCharacterRunTimeId = 0;
         activeGameView = null!;
@@ -101,8 +107,6 @@ public class CharacterActionManager : MonoBehaviour
         switch (state)
         {
             case CharacterTurnState.PlanningAction:
-                activeGameView.OnMoveButtonPressed += HandleMoveButtonPressed;
-                activeGameView.OnAttackButtonPressed += HandleAttackButtonPressed;
                 inputManager.OnMouseClick += HandleMouseClick;
                 break;
         }
@@ -113,8 +117,6 @@ public class CharacterActionManager : MonoBehaviour
         switch (state)
         {
             case CharacterTurnState.PlanningAction:
-                activeGameView.OnMoveButtonPressed -= HandleMoveButtonPressed;
-                activeGameView.OnAttackButtonPressed -= HandleAttackButtonPressed;
                 inputManager.OnMouseClick -= HandleMouseClick;
                 break;
         }
@@ -128,6 +130,7 @@ public class CharacterActionManager : MonoBehaviour
     async UniTask ExecuteSelectedAction()
     {
         if (selectedAction is not { HasSelectedTarget: true }) return;
+
         await selectedAction.ExecuteAsync();
         selectedAction = null;
         UpdateActionButtonSelection();
@@ -144,19 +147,15 @@ public class CharacterActionManager : MonoBehaviour
 
     void UpdateActionButtonSelection()
     {
-        activeGameView.SetMoveButtonSelectedState(selectedAction == moveAction);
-        activeGameView.SetAttackButtonSelectState(selectedAction == attackAction);
+        activeGameView.UpdateActionButtonSelection(selectedAction);
     }
 
-    void HandleMoveButtonPressed()
+    CharacterAction CreateAction(CharacterActionType type, int runTimeId) => type switch
     {
-        SelectAction(moveAction);
-    }
-
-    void HandleAttackButtonPressed()
-    {
-        SelectAction(attackAction);
-    }
+        CharacterActionType.Move => new MoveAction(characterManager, mapManager, runTimeId),
+        CharacterActionType.Attack => new AttackAction(characterManager, mapManager, runTimeId),
+        _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
+    };
 
     void HandleMouseClick(Vector2 mousePosition)
     {

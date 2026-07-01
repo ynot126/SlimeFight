@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Character : MonoBehaviour
@@ -14,6 +15,7 @@ public class Character : MonoBehaviour
     int maxHealth;
     int speed;
     int attackPower;
+    List<CharacterActionType> actions = new();
     
     // public field data
     public int RunTimeId => runTimeId;
@@ -23,6 +25,7 @@ public class Character : MonoBehaviour
     public Vector2 Position => transform.position;
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth;
+    public IReadOnlyList<CharacterActionType> Actions => actions;
     
     // event function
     public event Action? OnDeath;
@@ -38,6 +41,7 @@ public class Character : MonoBehaviour
         attackPower = characterData.attackPower;
         runTimeId = aRunTimeID;
         type = characterData.type;
+        actions = new List<CharacterActionType>(characterData.actions);
         
         characterStatusCanvas = Instantiate(characterStatusCanvasPrefab , statusCanvasContainer);
         characterStatusCanvas.Initialize(this);
@@ -80,4 +84,5 @@ public class CharacterData
     public int maxHealth = -1;
     public int speed = -1;
     public int attackPower = 1;
+    public List<CharacterActionType> actions = new();
 }

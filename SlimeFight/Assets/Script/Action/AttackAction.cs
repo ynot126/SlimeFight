@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class AttackAction : CharacterAction
 {
+    public override string ActionName => "Attack";
     int targetRunTimeId;
 
     public AttackAction(CharacterManager characterManager, MapManager mapManager, int activeCharacterRunTimeId)

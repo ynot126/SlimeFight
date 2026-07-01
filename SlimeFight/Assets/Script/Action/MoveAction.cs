@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class MoveAction : CharacterAction
 {
+    public override string ActionName => "Move";
     Vector2 targetPosition;
 
     public MoveAction(CharacterManager characterManager, MapManager mapManager, int activeCharacterRunTimeId)

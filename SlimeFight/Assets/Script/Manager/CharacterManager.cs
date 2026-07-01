@@ -63,6 +63,9 @@ public class CharacterManager : MonoBehaviour
     {
         characters[runTimeId].SetCharacterReadyAction(val);
     }
+
+    public IReadOnlyList<CharacterActionType> GetCharacterActions(int runTimeId)
+        => characters[runTimeId].Actions;
     void SpawnCharacter(CharacterData data, int runTimeId)
     {
         var randomPosition = mapManager.GetRandomPositionOnMap();
