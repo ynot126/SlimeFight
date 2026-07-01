@@ -59,6 +59,7 @@ public class CharacterActionManager : MonoBehaviour
         attackAction = new AttackAction(characterManager, mapManager, runTimeId);
 
         gameView.SetShowCharacterActionOption(true);
+        UpdateActionButtonSelection();
         characterManager.SetCharacterReadyAction(true, runTimeId);
         activeGameView.OnEndTurnButtonPressed += HandleEndTurnButtonPressed;
     }
@@ -129,6 +130,7 @@ public class CharacterActionManager : MonoBehaviour
         if (selectedAction is not { HasSelectedTarget: true }) return;
         await selectedAction.ExecuteAsync();
         selectedAction = null;
+        UpdateActionButtonSelection();
     }
 
     void SelectAction(CharacterAction action)
@@ -137,6 +139,13 @@ public class CharacterActionManager : MonoBehaviour
 
         action.Reset();
         selectedAction = action;
+        UpdateActionButtonSelection();
+    }
+
+    void UpdateActionButtonSelection()
+    {
+        activeGameView.SetMoveButtonSelectedState(selectedAction == moveAction);
+        activeGameView.SetAttackButtonSelectState(selectedAction == attackAction);
     }
 
     void HandleMoveButtonPressed()

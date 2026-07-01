@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,5 +27,15 @@ public class GameView : BaseView
     public void SetShowCharacterActionOption(bool val)
     {
         characterActionGroup.alpha = val ? 1 : 0;
+    }
+
+    public void SetMoveButtonSelectedState(bool val)
+    {
+        moveButton.transform.DOScale(val?1.2f:1f, 0.2f);
+    }
+
+    public void SetAttackButtonSelectState(bool val)
+    {
+        attackButton.transform.DOScale(val?1.2f:1f, 0.2f);
     }
 }
