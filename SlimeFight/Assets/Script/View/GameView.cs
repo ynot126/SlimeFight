@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,6 +14,8 @@ public class GameView : BaseView
     
     [Header("Other UI")]
     [SerializeField] Button endTurnButton = null!;
+    [SerializeField] TextMeshProUGUI roundText = null!;
+    
     public event Action? OnMoveButtonPressed;
     public event Action? OnAttackButtonPressed;
     public event Action? OnEndTurnButtonPressed;
@@ -37,5 +40,10 @@ public class GameView : BaseView
     public void SetAttackButtonSelectState(bool val)
     {
         attackButton.transform.DOScale(val?1.2f:1f, 0.2f);
+    }
+
+    public void SetRoundText(int round)
+    {
+        roundText.text = $"Round {round}";
     }
 }

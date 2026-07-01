@@ -68,14 +68,15 @@ public class GameDrive : MonoBehaviour
     {
         Debug.Log("Game Started");
         await UniTask.Yield();
-        for (int x = 0; x < 10; x++)
+        for (int round = 1; round <= 10; round++)
         {
-            await StartGameRound();
+            await StartGameRound(round);
         }
     }
 
-    async UniTask StartGameRound()
+    async UniTask StartGameRound(int round)
     {
+        gameView.SetRoundText(round);
         var orderList = characterManager.GetMovementOrder();
         foreach (var id in orderList)
         {
