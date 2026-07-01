@@ -8,6 +8,7 @@ public class Character : MonoBehaviour
     [SerializeField] Transform statusCanvasContainer = null!;
     [SerializeField] CharacterStatusCanvas characterStatusCanvasPrefab = null!;
     [SerializeField] SpriteRenderer spriteRenderer = null!;
+    [SerializeField] SpriteRenderer selectedSpriteRenderer = null!;
     // character data
     CharacterType type;
     int runTimeId;
@@ -52,6 +53,8 @@ public class Character : MonoBehaviour
         characterStatusCanvas = Instantiate(characterStatusCanvasPrefab , statusCanvasContainer);
         characterStatusCanvas.Initialize(this);
         characterStatusCanvas.SetVisible(false);
+
+        SetCharacterReadyAction(false);
     }
 
     public void RefillMana() => currentMana = maxMana;
@@ -79,7 +82,7 @@ public class Character : MonoBehaviour
 
     public void SetCharacterReadyAction(bool val)
     {
-        spriteRenderer.color = val ? Color.red : Color.white;
+        selectedSpriteRenderer.gameObject.SetActive(val);
     }
 
     public void SetStatusCanvasVisible(bool val)
@@ -93,14 +96,4 @@ public enum CharacterType
 {
     Player =1,
     Enemy =2,
-}
-[Serializable]
-public class CharacterData
-{
-    public CharacterType type;
-    public int maxHealth = -1;
-    public int speed = -1;
-    public int attackPower = 1;
-    public int maxMana = -1;
-    public List<CharacterActionType> actions = new();
 }
