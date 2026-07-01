@@ -25,10 +25,12 @@ public abstract class CharacterAction
     public abstract CharacterActionType ActionType { get; }
     public abstract int ManaCost { get; }
     public bool HasSelectedTarget { get; protected set; }
+    protected Vector2 TargetPosition { get; set; }
 
     public void Reset()
     {
         HasSelectedTarget = false;
+        TargetPosition = default;
         OnReset();
     }
 

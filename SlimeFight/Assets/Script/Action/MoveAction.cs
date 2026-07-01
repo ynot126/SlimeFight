@@ -5,7 +5,6 @@ using UnityEngine;
 public class MoveAction : CharacterAction
 {
     public override string ActionName => "Move";
-    Vector2 targetPosition;
 
     public MoveAction(CharacterManager characterManager, MapManager mapManager, int activeCharacterRunTimeId)
         : base(characterManager, mapManager, activeCharacterRunTimeId) { }
@@ -13,17 +12,15 @@ public class MoveAction : CharacterAction
     public override CharacterActionType ActionType => CharacterActionType.Move;
     public override int ManaCost => 1;
 
-    protected override void OnReset() => targetPosition = default;
-
     public override bool TrySelectTarget(Vector2 mousePosition)
     {
         if (!MapManager.IsPositionOnMap(mousePosition)) return false;
 
-        targetPosition = mousePosition;
+        TargetPosition = mousePosition;
         HasSelectedTarget = true;
         return true;
     }
 
     public override UniTask ExecuteAsync()
-        => CharacterManager.CharacterMoveToPosition(ActiveCharacterRunTimeId, targetPosition);
+        => CharacterManager.CharacterMoveToPosition(ActiveCharacterRunTimeId, TargetPosition);
 }

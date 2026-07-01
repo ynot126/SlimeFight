@@ -5,15 +5,12 @@ using UnityEngine;
 public class AttackAction : CharacterAction
 {
     public override string ActionName => "Attack";
-    int targetRunTimeId;
 
     public AttackAction(CharacterManager characterManager, MapManager mapManager, int activeCharacterRunTimeId)
         : base(characterManager, mapManager, activeCharacterRunTimeId) { }
 
     public override CharacterActionType ActionType => CharacterActionType.Attack;
     public override int ManaCost => 2;
-
-    protected override void OnReset() => targetRunTimeId = 0;
 
     public override bool TrySelectTarget(Vector2 mousePosition)
     {
@@ -22,14 +19,16 @@ public class AttackAction : CharacterAction
         if (!CharacterManager.IsValidAttackTarget(ActiveCharacterRunTimeId, target.RunTimeId))
             return false;
 
-        targetRunTimeId = target.RunTimeId;
+        TargetPosition = mousePosition;
         HasSelectedTarget = true;
         return true;
     }
 
     public override async UniTask ExecuteAsync()
     {
-        CharacterManager.CharacterAttack(ActiveCharacterRunTimeId, targetRunTimeId);
+        if (!CharacterManager.TryGetCharacterAtPosition(TargetPosition, ActiveCharacterRunTimeId, out var target))
+            return;
+        CharacterManager.CharacterAttack(ActiveCharacterRunTimeId, target.RunTimeId);
         await UniTask.Yield();
     }
 }
