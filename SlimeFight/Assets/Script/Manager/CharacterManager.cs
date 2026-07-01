@@ -66,6 +66,16 @@ public class CharacterManager : MonoBehaviour
 
     public IReadOnlyList<CharacterActionType> GetCharacterActions(int runTimeId)
         => characters[runTimeId].Actions;
+
+    public void RefillMana(int runTimeId) => characters[runTimeId].RefillMana();
+
+    public int GetCurrentMana(int runTimeId) => characters[runTimeId].CurrentMana;
+
+    public int GetMaxMana(int runTimeId) => characters[runTimeId].MaxMana;
+
+    public bool CanAffordMana(int runTimeId, int cost) => characters[runTimeId].CanAffordMana(cost);
+
+    public bool TrySpendMana(int runTimeId, int cost) => characters[runTimeId].TrySpendMana(cost);
     void SpawnCharacter(CharacterData data, int runTimeId)
     {
         var randomPosition = mapManager.GetRandomPositionOnMap();

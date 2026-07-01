@@ -16,6 +16,7 @@ public class GameView : BaseView
     [Header("Other UI")]
     [SerializeField] Button endTurnButton = null!;
     [SerializeField] TextMeshProUGUI roundText = null!;
+    [SerializeField] TextMeshProUGUI manaText = null!;
 
     readonly List<(ActionButton button, CharacterAction action)> spawnedActionButtons = new();
 
@@ -59,5 +60,18 @@ public class GameView : BaseView
     public void SetRoundText(int round)
     {
         roundText.text = $"Round {round}";
+    }
+
+    public void SetManaText(int current, int max)
+    {
+        manaText.text = $"Mana: {current}/{max}";
+    }
+
+    public void ClearManaText() => manaText.text = string.Empty;
+
+    public void UpdateActionButtonAffordability(int currentMana)
+    {
+        foreach (var (button, action) in spawnedActionButtons)
+            button.SetInteractable(currentMana >= action.ManaCost);
     }
 }

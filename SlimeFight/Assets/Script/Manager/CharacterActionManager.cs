@@ -58,12 +58,16 @@ public class CharacterActionManager : MonoBehaviour
         selectedAction = null;
         availableActions.Clear();
 
+        characterManager.RefillMana(runTimeId);
+        UpdateManaDisplay(runTimeId);
+
         foreach (var actionType in characterManager.GetCharacterActions(runTimeId))
             availableActions.Add(CreateAction(actionType, runTimeId));
 
         gameView.SpawnActionButtons(availableActions, SelectAction);
         gameView.SetShowCharacterActionOption(true);
         UpdateActionButtonSelection();
+        UpdateActionButtonAffordability();
         characterManager.SetCharacterReadyAction(true, runTimeId);
         activeGameView.OnEndTurnButtonPressed += HandleEndTurnButtonPressed;
     }
@@ -73,6 +77,7 @@ public class CharacterActionManager : MonoBehaviour
         activeGameView.OnEndTurnButtonPressed -= HandleEndTurnButtonPressed;
         characterManager.SetCharacterReadyAction(false, runTimeId);
         gameView.ClearActionButtons();
+        gameView.ClearManaText();
         gameView.SetShowCharacterActionOption(false);
         availableActions.Clear();
 
@@ -130,15 +135,19 @@ public class CharacterActionManager : MonoBehaviour
     async UniTask ExecuteSelectedAction()
     {
         if (selectedAction is not { HasSelectedTarget: true }) return;
+        if (!characterManager.TrySpendMana(activeCharacterRunTimeId, selectedAction.ManaCost)) return;
 
         await selectedAction.ExecuteAsync();
         selectedAction = null;
         UpdateActionButtonSelection();
+        UpdateManaDisplay(activeCharacterRunTimeId);
+        UpdateActionButtonAffordability();
     }
 
     void SelectAction(CharacterAction action)
     {
         if (currentState != CharacterTurnState.PlanningAction) return;
+        if (!characterManager.CanAffordMana(activeCharacterRunTimeId, action.ManaCost)) return;
 
         action.Reset();
         selectedAction = action;
@@ -148,6 +157,18 @@ public class CharacterActionManager : MonoBehaviour
     void UpdateActionButtonSelection()
     {
         activeGameView.UpdateActionButtonSelection(selectedAction);
+    }
+
+    void UpdateManaDisplay(int runTimeId)
+    {
+        activeGameView.SetManaText(
+            characterManager.GetCurrentMana(runTimeId),
+            characterManager.GetMaxMana(runTimeId));
+    }
+
+    void UpdateActionButtonAffordability()
+    {
+        activeGameView.UpdateActionButtonAffordability(characterManager.GetCurrentMana(activeCharacterRunTimeId));
     }
 
     CharacterAction CreateAction(CharacterActionType type, int runTimeId) => type switch

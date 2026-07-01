@@ -13,6 +13,8 @@ public class Character : MonoBehaviour
     int runTimeId;
     int currentHealth;
     int maxHealth;
+    int currentMana;
+    int maxMana;
     int speed;
     int attackPower;
     List<CharacterActionType> actions = new();
@@ -25,6 +27,8 @@ public class Character : MonoBehaviour
     public Vector2 Position => transform.position;
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth;
+    public int CurrentMana => currentMana;
+    public int MaxMana => maxMana;
     public IReadOnlyList<CharacterActionType> Actions => actions;
     
     // event function
@@ -37,6 +41,8 @@ public class Character : MonoBehaviour
     {
         maxHealth = characterData.maxHealth;
         currentHealth = maxHealth;
+        maxMana = characterData.maxMana;
+        currentMana = maxMana;
         speed = characterData.speed;
         attackPower = characterData.attackPower;
         runTimeId = aRunTimeID;
@@ -46,6 +52,17 @@ public class Character : MonoBehaviour
         characterStatusCanvas = Instantiate(characterStatusCanvasPrefab , statusCanvasContainer);
         characterStatusCanvas.Initialize(this);
         characterStatusCanvas.SetVisible(false);
+    }
+
+    public void RefillMana() => currentMana = maxMana;
+
+    public bool CanAffordMana(int cost) => currentMana >= cost;
+
+    public bool TrySpendMana(int cost)
+    {
+        if (!CanAffordMana(cost)) return false;
+        currentMana -= cost;
+        return true;
     }
 
     public void TakeDamage(int damage)
@@ -84,5 +101,6 @@ public class CharacterData
     public int maxHealth = -1;
     public int speed = -1;
     public int attackPower = 1;
+    public int maxMana = -1;
     public List<CharacterActionType> actions = new();
 }

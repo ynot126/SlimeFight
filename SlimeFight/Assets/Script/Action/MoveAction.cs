@@ -11,6 +11,7 @@ public class MoveAction : CharacterAction
         : base(characterManager, mapManager, activeCharacterRunTimeId) { }
 
     public override CharacterActionType ActionType => CharacterActionType.Move;
+    public override int ManaCost => 1;
 
     protected override void OnReset() => targetPosition = default;
 

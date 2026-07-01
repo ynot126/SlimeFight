@@ -48,16 +48,14 @@ MonoBehaviour:
     playerCharacters:
     - type: 1
       maxHealth: 100
-      speed: -1
+      speed: 1
       attackPower: 1
-      actions:
-      - 0
-      - 1
+      maxMana: 3
+      actions: 0000000001000000
     - type: 2
       maxHealth: 100
-      speed: -1
+      speed: 0
       attackPower: 1
-      actions:
-      - 0
-      - 1
+      maxMana: 3
+      actions: 0000000001000000
     enemyCharacters: []

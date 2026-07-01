@@ -23,6 +23,7 @@ public abstract class CharacterAction
     }
 
     public abstract CharacterActionType ActionType { get; }
+    public abstract int ManaCost { get; }
     public bool HasSelectedTarget { get; protected set; }
 
     public void Reset()

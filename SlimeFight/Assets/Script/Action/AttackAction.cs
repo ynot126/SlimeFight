@@ -11,6 +11,7 @@ public class AttackAction : CharacterAction
         : base(characterManager, mapManager, activeCharacterRunTimeId) { }
 
     public override CharacterActionType ActionType => CharacterActionType.Attack;
+    public override int ManaCost => 2;
 
     protected override void OnReset() => targetRunTimeId = 0;
 
