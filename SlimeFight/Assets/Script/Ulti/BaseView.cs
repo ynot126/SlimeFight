@@ -2,7 +2,8 @@ using UnityEngine;
 
 public abstract class BaseView : MonoBehaviour
 {
-    public bool IsActive { get; private set; }
+    public bool IsActive => isActive;
+    bool isActive;
 
     /// <summary>
     /// Called when the view is first pushed onto the stack and created.
@@ -11,7 +12,7 @@ public abstract class BaseView : MonoBehaviour
     public virtual void OnPresent()
     {
         gameObject.SetActive(true);
-        IsActive = true;
+        isActive = true;
     }
 
     /// <summary>
@@ -20,7 +21,7 @@ public abstract class BaseView : MonoBehaviour
     /// </summary>
     public virtual void OnDismiss()
     {
-        IsActive = false;
+        isActive = false;
         gameObject.SetActive(false);
     }
 
@@ -31,7 +32,7 @@ public abstract class BaseView : MonoBehaviour
     public virtual void OnEnterForeground()
     {
         gameObject.SetActive(true);
-        IsActive = true;
+        isActive = true;
     }
 
     /// <summary>
@@ -40,7 +41,7 @@ public abstract class BaseView : MonoBehaviour
     /// </summary>
     public virtual void OnEnterBackground()
     {
-        IsActive = false;
+        isActive = false;
         gameObject.SetActive(false);
     }
 }

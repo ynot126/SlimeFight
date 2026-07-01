@@ -9,8 +9,10 @@ public class CharacterAction
 
     public string ActionName => data.Id;
     public int ManaCost => data.ManaCost;
-    public bool HasSelectedTarget { get; private set; }
+    public bool HasSelectedTarget => hasSelectedTarget;
     public Vector2 TargetPosition => selectedTarget.Position;
+
+    bool hasSelectedTarget;
 
     ActionTarget selectedTarget;
 
@@ -22,7 +24,7 @@ public class CharacterAction
 
     public void Reset()
     {
-        HasSelectedTarget = false;
+        hasSelectedTarget = false;
         selectedTarget = default;
     }
 
@@ -32,7 +34,7 @@ public class CharacterAction
             return false;
 
         selectedTarget = target;
-        HasSelectedTarget = true;
+        hasSelectedTarget = true;
         return true;
     }
 

@@ -2,31 +2,36 @@
 
 public class ActionData
 {
-    public string Id { get; }
-    public int ManaCost { get; private set; }
-    public ITargetSelectStrategy TargetStrategy { get; private set; } = null!;
-    public IActionExecution Execution { get; private set; } = null!;
+    readonly string id;
+    int manaCost;
+    ITargetSelectStrategy targetStrategy = null!;
+    IActionExecution execution = null!;
+
+    public string Id => id;
+    public int ManaCost => manaCost;
+    public ITargetSelectStrategy TargetStrategy => targetStrategy;
+    public IActionExecution Execution => execution;
 
     public ActionData(string id)
     {
-        Id = id;
+        this.id = id;
     }
 
     public ActionData SetCost(int cost)
     {
-        ManaCost = cost;
+        manaCost = cost;
         return this;
     }
 
     public ActionData SetTargetedStrategy(ITargetSelectStrategy strategy)
     {
-        TargetStrategy = strategy;
+        targetStrategy = strategy;
         return this;
     }
 
     public ActionData SetActionExecution(IActionExecution execution)
     {
-        Execution = execution;
+        this.execution = execution;
         return this;
     }
 }

@@ -3,12 +3,15 @@ using UnityEngine;
 
 public readonly struct ActionTarget
 {
-    public Vector2 Position { get; }
-    public int TargetCharacterRunTimeId { get; }
+    readonly Vector2 position;
+    readonly int targetCharacterRunTimeId;
+
+    public Vector2 Position => position;
+    public int TargetCharacterRunTimeId => targetCharacterRunTimeId;
 
     public ActionTarget(Vector2 position, int targetCharacterRunTimeId = 0)
     {
-        Position = position;
-        TargetCharacterRunTimeId = targetCharacterRunTimeId;
+        this.position = position;
+        this.targetCharacterRunTimeId = targetCharacterRunTimeId;
     }
 }
