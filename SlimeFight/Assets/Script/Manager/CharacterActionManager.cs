@@ -13,19 +13,22 @@ public enum CharacterTurnState
 
 public class CharacterActionManager : MonoBehaviour
 {
+    // Managers
     CharacterManager characterManager = null!;
     MapManager mapManager = null!;
     InputManager inputManager = null!;
-
+    
+    //Turn State
     CharacterTurnState currentState = CharacterTurnState.Inactive;
     UniTaskCompletionSource? stateCompletionSource;
     bool isEndTurnRequested;
 
-    readonly List<CharacterAction> availableActions = new();
-    CharacterAction? selectedAction;
-
     int activeCharacterRunTimeId;
     GameView activeGameView = null!;
+    
+    //Action State
+    readonly List<CharacterAction> availableActions = new();
+    CharacterAction? selectedAction;
 
     public void Initialize(CharacterManager aCharacterManager, MapManager aMapManager, InputManager aInputManager)
     {
@@ -33,6 +36,8 @@ public class CharacterActionManager : MonoBehaviour
         mapManager = aMapManager;
         inputManager = aInputManager;
     }
+    
+    #region Turn Lifecycle
 
     public async UniTask RunCharacterTurn(int runTimeId, GameView gameView)
     {
@@ -46,7 +51,7 @@ public class CharacterActionManager : MonoBehaviour
             await RunState(CharacterTurnState.ExecutingAction);
         }
 
-        EndTurn(runTimeId, gameView);
+        EndTurn();
     }
 
     void BeginTurn(int runTimeId, GameView gameView)
@@ -63,21 +68,21 @@ public class CharacterActionManager : MonoBehaviour
         foreach (var actionId in characterManager.GetCharacterActions(runTimeId))
             availableActions.Add(CreateAction(actionId, runTimeId));
 
-        gameView.SpawnActionButtons(availableActions, SelectAction);
-        gameView.SetShowCharacterActionOption(true);
+        activeGameView.SpawnActionButtons(availableActions, SelectAction);
+        activeGameView.SetShowCharacterActionOption(true);
         UpdateActionButtonSelection();
         UpdateActionButtonAffordability();
         characterManager.SetCharacterReadyAction(true, runTimeId);
         activeGameView.OnEndTurnButtonPressed += HandleEndTurnButtonPressed;
     }
 
-    void EndTurn(int runTimeId, GameView gameView)
+    void EndTurn()
     {
         activeGameView.OnEndTurnButtonPressed -= HandleEndTurnButtonPressed;
-        characterManager.SetCharacterReadyAction(false, runTimeId);
-        gameView.ClearActionButtons();
-        gameView.ClearManaText();
-        gameView.SetShowCharacterActionOption(false);
+        characterManager.SetCharacterReadyAction(false, activeCharacterRunTimeId);
+        activeGameView.ClearActionButtons();
+        activeGameView.ClearManaText();
+        activeGameView.SetShowCharacterActionOption(false);
         availableActions.Clear();
 
         activeCharacterRunTimeId = 0;
@@ -86,15 +91,17 @@ public class CharacterActionManager : MonoBehaviour
         selectedAction = null;
     }
 
+    #endregion
+
+    #region State Machine
+
     async UniTask RunState(CharacterTurnState state)
     {
         currentState = state;
         OnStateEnter(state);
 
         if (state == CharacterTurnState.ExecutingAction)
-        {
             await ExecuteSelectedAction();
-        }
         else
         {
             stateCompletionSource = new UniTaskCompletionSource();
@@ -126,9 +133,20 @@ public class CharacterActionManager : MonoBehaviour
         }
     }
 
-    void CompleteCurrentState()
+    void CompleteCurrentState() => stateCompletionSource?.TrySetResult();
+
+    #endregion
+
+    #region Action Selection & Execution
+
+    void SelectAction(CharacterAction action)
     {
-        stateCompletionSource?.TrySetResult();
+        if (currentState != CharacterTurnState.PlanningAction) return;
+        if (!characterManager.CanAffordMana(activeCharacterRunTimeId, action.ManaCost)) return;
+
+        action.Reset();
+        selectedAction = action;
+        UpdateActionButtonSelection();
     }
 
     async UniTask ExecuteSelectedAction()
@@ -143,15 +161,12 @@ public class CharacterActionManager : MonoBehaviour
         UpdateActionButtonAffordability();
     }
 
-    void SelectAction(CharacterAction action)
-    {
-        if (currentState != CharacterTurnState.PlanningAction) return;
-        if (!characterManager.CanAffordMana(activeCharacterRunTimeId, action.ManaCost)) return;
+    CharacterAction CreateAction(string actionId, int runTimeId)
+        => new CharacterAction(ActionLibrary.GetAction(actionId), characterManager, mapManager, runTimeId);
 
-        action.Reset();
-        selectedAction = action;
-        UpdateActionButtonSelection();
-    }
+    #endregion
+
+    #region UI
 
     void UpdateActionButtonSelection()
     {
@@ -170,8 +185,9 @@ public class CharacterActionManager : MonoBehaviour
         activeGameView.UpdateActionButtonAffordability(characterManager.GetCurrentMana(activeCharacterRunTimeId));
     }
 
-    CharacterAction CreateAction(string actionId, int runTimeId)
-        => new CharacterAction(ActionLibrary.GetAction(actionId), characterManager, mapManager, runTimeId);
+    #endregion
+
+    #region Event Handlers
 
     void HandleMouseClick(Vector2 mousePosition)
     {
@@ -186,4 +202,6 @@ public class CharacterActionManager : MonoBehaviour
         isEndTurnRequested = true;
         CompleteCurrentState();
     }
+
+    #endregion
 }
