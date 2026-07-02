@@ -15,15 +15,15 @@ public class MapManager : MonoBehaviour
         await UniTask.Yield();
     }
 
-    public Vector2 GetRandomPositionOnMap()
+    public Vector3 GetRandomPositionOnMap()
     {
         var x = Random.Range(-5f, 5f);
-        var y = Random.Range(-5f, 5f);
-        return new Vector2(x, y);
+        var z = Random.Range(-5f, 5f);
+        return new Vector3(x,0,z);
     }
 
-    public bool IsPositionOnMap(Vector2 position)
+    public bool IsPositionOnMap(Vector3 position)
     {
-        return position.x is > -5 and < 5 && position.y is > -5 and < 5;
+        return position.x is > -5 and < 5 && position.z is > -5 and < 5;
     }
 }

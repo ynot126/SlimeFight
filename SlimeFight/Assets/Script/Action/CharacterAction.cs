@@ -11,7 +11,7 @@ public class CharacterAction
     public int ManaCost => data.ManaCost;
     public float ActionRange => data.TargetStrategy.Range;
     public bool HasSelectedTarget => hasSelectedTarget;
-    public Vector2 TargetPosition => selectedTarget.Position;
+    public Vector3 TargetPosition => selectedTarget.Position;
 
     bool hasSelectedTarget;
 
@@ -29,7 +29,7 @@ public class CharacterAction
         selectedTarget = default;
     }
 
-    public bool TrySelectTarget(Vector2 mousePosition)
+    public bool TrySelectTarget(Vector3 mousePosition)
     {
         if (!data.TargetStrategy.TrySelectTarget(context, mousePosition, out var target))
             return false;

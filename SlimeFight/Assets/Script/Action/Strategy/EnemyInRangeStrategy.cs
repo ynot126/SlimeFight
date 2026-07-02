@@ -11,7 +11,7 @@ public class EnemyInRangeStrategy : ITargetSelectStrategy
         this.range = range;
     }
 
-    public bool TrySelectTarget(ActionContext ctx, Vector2 mousePosition, out ActionTarget target)
+    public bool TrySelectTarget(ActionContext ctx, Vector3 mousePosition, out ActionTarget target)
     {
         target = default;
         if (!ctx.CharacterManager.TryGetCharacterAtPosition(mousePosition, ctx.ActiveCharacterRunTimeId, out var character))
@@ -21,7 +21,7 @@ public class EnemyInRangeStrategy : ITargetSelectStrategy
         if (!ctx.CharacterManager.IsWithinRange(ctx.ActiveCharacterRunTimeId, character.RunTimeId, range))
             return false;
 
-        target = new ActionTarget(mousePosition, character.RunTimeId);
+        target = new ActionTarget(character.Position, character.RunTimeId);
         return true;
     }
 }

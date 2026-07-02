@@ -34,7 +34,7 @@ public class CharacterManager : MonoBehaviour
         inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
     }
 
-    void HandleMousePositionUpdate(Vector2 position)
+    void HandleMousePositionUpdate(Vector3 position)
     {
         Character? newHovered = TryGetCharacterAtPosition(position, -1, out var character) ? character : null;
         if (newHovered == hoveredCharacter) return;
@@ -83,8 +83,10 @@ public class CharacterManager : MonoBehaviour
     public bool TrySpendMana(int runTimeId, int cost) => characters[runTimeId].TrySpendMana(cost);
     void SpawnCharacter(CharacterData data, int runTimeId)
     {
-        var randomPosition = mapManager.GetRandomPositionOnMap();
-        var character = Instantiate(characterPrefab, randomPosition, Quaternion.identity, CharacterParent);
+        var mapPosition = mapManager.GetRandomPositionOnMap();
+        var spawnPosition = new Vector3(mapPosition.x, 0f, mapPosition.z);
+        var character = Instantiate(characterPrefab, CharacterParent);
+        character.transform.SetPositionAndRotation(spawnPosition, Quaternion.identity);
         character.Initialize(data , runTimeId);
         characters[runTimeId] = character;
         character.OnDeath += () =>
@@ -94,26 +96,26 @@ public class CharacterManager : MonoBehaviour
         };
     }
 
-    public async UniTask CharacterMoveToPosition(int runTimeId, Vector2 position)
+    public async UniTask CharacterMoveToPosition(int runTimeId, Vector3 position)
     {
         var characterTransform = characters[runTimeId].transform;
         var start = characterTransform.position;
-        var end = new Vector3(position.x, position.y, start.z);
-        var distance = Vector2.Distance(start, end);
+        var end = new Vector3(position.x, 0f, position.z);
+        var distance = Vector3.Distance(start, end);
         if (distance <= Mathf.Epsilon) return;
 
         var duration = distance / moveSpeed;
         await characterTransform.DOMove(end, duration).SetEase(Ease.Linear).ToUniTask();
     }
 
-    public bool TryGetCharacterAtPosition(Vector2 position, int excludeRunTimeId, out Character character)
+    public bool TryGetCharacterAtPosition(Vector3 position, int excludeRunTimeId, out Character character)
     {
         character = null!;
         var closestDistance = characterSelectionRadius;
         foreach (var candidate in characters.Values)
         {
             if (candidate.RunTimeId == excludeRunTimeId) continue;
-            var distance = Vector2.Distance(candidate.Position, position);
+            var distance = Vector3.Distance(candidate.Position, position);
             if (distance >= closestDistance) continue;
             closestDistance = distance;
             character = candidate;
@@ -139,13 +141,13 @@ public class CharacterManager : MonoBehaviour
     {
         if (!characters.TryGetValue(sourceRunTimeId, out var source)) return false;
         if (!characters.TryGetValue(targetRunTimeId, out var target)) return false;
-        return Vector2.Distance(source.Position, target.Position) <= range;
+        return Vector3.Distance(source.Position, target.Position) <= range;
     }
 
-    public bool IsWithinRange(int sourceRunTimeId, Vector2 position, float range)
+    public bool IsWithinRange(int sourceRunTimeId, Vector3 position, float range)
     {
         if (!characters.TryGetValue(sourceRunTimeId, out var source)) return false;
-        return Vector2.Distance(source.Position, position) <= range;
+        return Vector3.Distance(source.Position, position) <= range;
     }
 }
     

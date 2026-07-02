@@ -11,7 +11,7 @@ public class MoveRangeStrategy : ITargetSelectStrategy
         this.range = range;
     }
 
-    public bool TrySelectTarget(ActionContext ctx, Vector2 mousePosition, out ActionTarget target)
+    public bool TrySelectTarget(ActionContext ctx, Vector3 mousePosition, out ActionTarget target)
     {
         target = default;
         if (!ctx.MapManager.IsPositionOnMap(mousePosition)) return false;

@@ -206,7 +206,7 @@ public class CharacterActionManager : MonoBehaviour
 
     #region Event Handlers
 
-    void HandleMouseClick(Vector2 mousePosition)
+    void HandleMouseClick(Vector3 mousePosition)
     {
         if (currentState != CharacterTurnState.PlanningAction || selectedAction == null) return;
         if (!selectedAction.TrySelectTarget(mousePosition)) return;

@@ -26,7 +26,7 @@ public class Character : MonoBehaviour
     public int Speed => speed;
     public CharacterType Type => type;
     public int AttackPower => attackPower;
-    public Vector2 Position => transform.position;
+    public Vector3 Position => transform.position;
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth;
     public int CurrentMana => currentMana;
