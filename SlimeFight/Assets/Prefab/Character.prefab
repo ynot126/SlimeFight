@@ -219,7 +219,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1972307961540213785}
-  - {fileID: 135504773559458383}
   - {fileID: 6263487245491583546}
   - {fileID: 2017338849398309208}
   m_Father: {fileID: 0}
@@ -236,8 +235,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8a4e8ea64a96dd43bd8c51bf15087e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  statusCanvasContainer: {fileID: 135504773559458383}
-  characterStatusCanvasPrefab: {fileID: 326735864988841472, guid: d8529a04413f9e545b1fd8649c0899d6, type: 3}
   spriteRenderer: {fileID: 2208037621506054174}
   selectedSpriteRenderer: {fileID: 2081253752047573825}
   actionRangeIndicator: {fileID: 7821688189707479493}
@@ -328,34 +325,3 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!1 &9200837416568788069
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 135504773559458383}
-  m_Layer: 0
-  m_Name: StatusCanvasContainer
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &135504773559458383
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9200837416568788069}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.328, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 4355560708560345814}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

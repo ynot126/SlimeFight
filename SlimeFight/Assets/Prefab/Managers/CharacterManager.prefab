@@ -46,3 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CharacterParent: {fileID: 2014083161446992815}
   characterPrefab: {fileID: 6919870541567987507, guid: 7fcfb8015fc807c458d0999daf6793c1, type: 3}
+  characterStatusCanvasPrefab: {fileID: 326735864988841472, guid: d8529a04413f9e545b1fd8649c0899d6, type: 3}
+  characterStatusCanvasParent: {fileID: 2014083161446992815}
+  moveSpeed: 5
+  characterSelectionRadius: 0.75

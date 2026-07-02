@@ -9,10 +9,13 @@ public class CharacterManager : MonoBehaviour
 {
     [SerializeField] Transform CharacterParent = null!;
     [SerializeField] Character characterPrefab = null!;
+    [SerializeField] CharacterStatusCanvas characterStatusCanvasPrefab = null!;
+    [SerializeField] Transform characterStatusCanvasParent = null!;
     [SerializeField] float moveSpeed = 5f;
     [SerializeField] float characterSelectionRadius = 0.75f;
 
-    Dictionary<int, Character> characters = new Dictionary<int, Character>();
+    readonly Dictionary<int, Character> characters = new Dictionary<int, Character>();
+    readonly Dictionary<int, CharacterStatusCanvas> statusCanvases = new Dictionary<int, CharacterStatusCanvas>();
     
     int currentIdCounter = 1;
     
@@ -20,6 +23,7 @@ public class CharacterManager : MonoBehaviour
     MapManager mapManager = null!;
     InputManager inputManager = null!;
     Character? hoveredCharacter;
+    CharacterStatusCanvas? hoveredStatusCanvas;
 
     public void Initialize(GameData aGameData, MapManager aMapManager, InputManager aInputManager)
     {
@@ -36,12 +40,18 @@ public class CharacterManager : MonoBehaviour
 
     void HandleMousePositionUpdate(Vector3 position)
     {
-        Character? newHovered = TryGetCharacterAtPosition(position, -1, out var character) ? character : null;
+        var newHovered = TryGetCharacterAtPosition(position, -1, out var character) ? character : null;
         if (newHovered == hoveredCharacter) return;
 
-        hoveredCharacter?.SetStatusCanvasVisible(false);
+        hoveredStatusCanvas?.SetVisible(false);
         hoveredCharacter = newHovered;
-        hoveredCharacter?.SetStatusCanvasVisible(true);
+        hoveredStatusCanvas = hoveredCharacter != null && statusCanvases.TryGetValue(hoveredCharacter.RunTimeId, out var canvas)
+            ? canvas
+            : null;
+        if (hoveredStatusCanvas == null) return;
+
+        hoveredStatusCanvas.UpdateStatus(hoveredCharacter.CurrentHealth, hoveredCharacter.MaxHealth);
+        hoveredStatusCanvas.SetVisible(true);
     }
 
     public async UniTask SpawnCharacter()
@@ -89,9 +99,23 @@ public class CharacterManager : MonoBehaviour
         character.transform.SetPositionAndRotation(spawnPosition, Quaternion.identity);
         character.Initialize(data , runTimeId);
         characters[runTimeId] = character;
+
+        var statusCanvas = Instantiate(characterStatusCanvasPrefab, characterStatusCanvasParent);
+        statusCanvas.Initialize();
+        statusCanvases[runTimeId] = statusCanvas;
+
         character.OnDeath += () =>
         {
-            if (hoveredCharacter == character) hoveredCharacter = null;
+            if (statusCanvases.TryGetValue(runTimeId, out var canvas))
+            {
+                if (hoveredStatusCanvas == canvas)
+                {
+                    hoveredCharacter = null;
+                    hoveredStatusCanvas = null;
+                }
+                Destroy(canvas.gameObject);
+                statusCanvases.Remove(runTimeId);
+            }
             characters.Remove(runTimeId);
         };
     }

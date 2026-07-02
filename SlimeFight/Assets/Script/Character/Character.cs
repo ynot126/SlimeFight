@@ -5,8 +5,6 @@ using UnityEngine;
 
 public class Character : MonoBehaviour
 {
-    [SerializeField] Transform statusCanvasContainer = null!;
-    [SerializeField] CharacterStatusCanvas characterStatusCanvasPrefab = null!;
     [SerializeField] SpriteRenderer spriteRenderer = null!;
     [SerializeField] SpriteRenderer selectedSpriteRenderer = null!;
     [SerializeField] CharacterActionRangeIndicator actionRangeIndicator = null!;
@@ -35,10 +33,7 @@ public class Character : MonoBehaviour
     
     // event function
     public event Action? OnDeath;
-    
-    // UI
-    CharacterStatusCanvas characterStatusCanvas = null!;
-    
+
     public void Initialize(CharacterData characterData, int aRunTimeID)
     {
         maxHealth = characterData.maxHealth;
@@ -50,10 +45,6 @@ public class Character : MonoBehaviour
         runTimeId = aRunTimeID;
         type = characterData.type;
         actions = new List<string>(characterData.actionIds);
-        
-        characterStatusCanvas = Instantiate(characterStatusCanvasPrefab , statusCanvasContainer);
-        characterStatusCanvas.Initialize(this);
-        characterStatusCanvas.SetVisible(false);
 
         SetCharacterReadyAction(false);
         actionRangeIndicator.SetVisible(false);
@@ -99,11 +90,6 @@ public class Character : MonoBehaviour
         actionRangeIndicator.SetVisible(true);
     }
 
-    public void SetStatusCanvasVisible(bool val)
-    {
-        characterStatusCanvas.SetVisible(val);
-        if (val) characterStatusCanvas.UpdateStatus();
-    }
 }
 
 public enum CharacterType

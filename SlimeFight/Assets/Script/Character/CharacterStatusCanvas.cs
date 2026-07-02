@@ -3,14 +3,14 @@ using UnityEngine;
 
 public class CharacterStatusCanvas : MonoBehaviour
 {
-    [SerializeField] TextMeshProUGUI characterHealthText;
-    [SerializeField] CanvasGroup canvasGroup;
+    [SerializeField] TextMeshProUGUI characterHealthText = null!;
+    [SerializeField] CanvasGroup canvasGroup = null!;
+    [SerializeField] float worldAnchorHeight = 0.5f;
 
-    Character character;
-    public void Initialize(Character aCharacter)
+    public void Initialize()
     {
-        character = aCharacter;
-        UpdateStatus();
+        transform.localPosition = new Vector3(0f, worldAnchorHeight, 0f);
+        SetVisible(false);
     }
 
     public void SetVisible(bool val)
@@ -18,8 +18,8 @@ public class CharacterStatusCanvas : MonoBehaviour
         canvasGroup.alpha = val ? 1 : 0;
     }
 
-    public void UpdateStatus()
+    public void UpdateStatus(int currentHealth, int maxHealth)
     {
-        characterHealthText.text = $"Health: {character.CurrentHealth}/{character.MaxHealth}";
+        characterHealthText.text = $"Health: {currentHealth}/{maxHealth}";
     }
 }
