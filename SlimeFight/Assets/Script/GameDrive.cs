@@ -47,7 +47,7 @@ public class GameDrive : MonoBehaviour
         mapManager.Initialize(gameData);
         
         characterManager = Instantiate(characterManagerPrefab);
-        characterManager.Initialize(gameData, mapManager, inputManager);
+        characterManager.Initialize(gameData, mapManager, inputManager, Camera.main!);
         
         characterActionManager = Instantiate(characterActionManagerPrefab);
         characterActionManager.Initialize(characterManager, mapManager, inputManager);

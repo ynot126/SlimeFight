@@ -10,7 +10,7 @@ public class CharacterManager : MonoBehaviour
     [SerializeField] Transform CharacterParent = null!;
     [SerializeField] Character characterPrefab = null!;
     [SerializeField] CharacterStatusCanvas characterStatusCanvasPrefab = null!;
-    [SerializeField] Transform characterStatusCanvasParent = null!;
+    [SerializeField] Canvas characterStatusCanvas = null!;
     [SerializeField] float moveSpeed = 5f;
     [SerializeField] float characterSelectionRadius = 0.75f;
 
@@ -22,14 +22,16 @@ public class CharacterManager : MonoBehaviour
     GameData gameData = null!;
     MapManager mapManager = null!;
     InputManager inputManager = null!;
+    Camera mainCamera = null!;
     Character? hoveredCharacter;
     CharacterStatusCanvas? hoveredStatusCanvas;
 
-    public void Initialize(GameData aGameData, MapManager aMapManager, InputManager aInputManager)
+    public void Initialize(GameData aGameData, MapManager aMapManager, InputManager aInputManager, Camera aMainCamera)
     {
         gameData = aGameData;
         mapManager = aMapManager;
         inputManager = aInputManager;
+        mainCamera = aMainCamera;
         inputManager.OnMousePositionUpdate += HandleMousePositionUpdate;
     }
 
@@ -50,7 +52,8 @@ public class CharacterManager : MonoBehaviour
             : null;
         if (hoveredStatusCanvas == null) return;
 
-        hoveredStatusCanvas.UpdateStatus(hoveredCharacter.CurrentHealth, hoveredCharacter.MaxHealth);
+        hoveredStatusCanvas.UpdateStatus(hoveredCharacter);
+        hoveredStatusCanvas.AnchorToWorldPosition(hoveredCharacter.Position, mainCamera);
         hoveredStatusCanvas.SetVisible(true);
     }
 
@@ -100,8 +103,9 @@ public class CharacterManager : MonoBehaviour
         character.Initialize(data , runTimeId);
         characters[runTimeId] = character;
 
-        var statusCanvas = Instantiate(characterStatusCanvasPrefab, characterStatusCanvasParent);
-        statusCanvas.Initialize();
+        var canvasRect = (RectTransform)characterStatusCanvas.transform;
+        var statusCanvas = Instantiate(characterStatusCanvasPrefab, canvasRect);
+        statusCanvas.Initialize(canvasRect);
         statusCanvases[runTimeId] = statusCanvas;
 
         character.OnDeath += () =>
