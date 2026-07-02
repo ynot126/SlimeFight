@@ -4,6 +4,7 @@ using UnityEngine;
 public class EnemyInRangeStrategy : ITargetSelectStrategy
 {
     readonly float range;
+    public float Range => range;
 
     public EnemyInRangeStrategy(float range)
     {

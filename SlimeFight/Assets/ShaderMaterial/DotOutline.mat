@@ -53,6 +53,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _DotNumber: 20
     - _EnableExternalAlpha: 0
     - _Speed: 2
     - _Thickness: 0.16

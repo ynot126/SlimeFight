@@ -4,6 +4,7 @@ using UnityEngine;
 public class MoveRangeStrategy : ITargetSelectStrategy
 {
     readonly int range;
+    public float Range => range;
 
     public MoveRangeStrategy(int range)
     {

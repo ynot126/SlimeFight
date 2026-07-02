@@ -9,6 +9,7 @@ public class Character : MonoBehaviour
     [SerializeField] CharacterStatusCanvas characterStatusCanvasPrefab = null!;
     [SerializeField] SpriteRenderer spriteRenderer = null!;
     [SerializeField] SpriteRenderer selectedSpriteRenderer = null!;
+    [SerializeField] CharacterActionRangeIndicator actionRangeIndicator = null!;
     // character data
     CharacterType type;
     int runTimeId;
@@ -55,6 +56,7 @@ public class Character : MonoBehaviour
         characterStatusCanvas.SetVisible(false);
 
         SetCharacterReadyAction(false);
+        actionRangeIndicator.SetVisible(false);
     }
 
     public void RefillMana() => currentMana = maxMana;
@@ -83,6 +85,18 @@ public class Character : MonoBehaviour
     public void SetCharacterReadyAction(bool val)
     {
         selectedSpriteRenderer.gameObject.SetActive(val);
+    }
+
+    public void SetActionRangeIndicator(float range, bool visible)
+    {
+        if (!visible)
+        {
+            actionRangeIndicator.SetVisible(false);
+            return;
+        }
+
+        actionRangeIndicator.SetRange(range);
+        actionRangeIndicator.SetVisible(true);
     }
 
     public void SetStatusCanvasVisible(bool val)

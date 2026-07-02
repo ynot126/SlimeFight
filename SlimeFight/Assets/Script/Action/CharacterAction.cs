@@ -9,6 +9,7 @@ public class CharacterAction
 
     public string ActionName => data.Id;
     public int ManaCost => data.ManaCost;
+    public float ActionRange => data.TargetStrategy.Range;
     public bool HasSelectedTarget => hasSelectedTarget;
     public Vector2 TargetPosition => selectedTarget.Position;
 

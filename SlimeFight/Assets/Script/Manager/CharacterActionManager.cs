@@ -79,6 +79,7 @@ public class CharacterActionManager : MonoBehaviour
     void EndTurn()
     {
         activeGameView.OnEndTurnButtonPressed -= HandleEndTurnButtonPressed;
+        HideActionRangeIndicator();
         characterManager.SetCharacterReadyAction(false, activeCharacterRunTimeId);
         activeGameView.ClearActionButtons();
         activeGameView.ClearManaText();
@@ -129,6 +130,7 @@ public class CharacterActionManager : MonoBehaviour
         {
             case CharacterTurnState.PlanningAction:
                 inputManager.OnMouseClick -= HandleMouseClick;
+                HideActionRangeIndicator();
                 break;
         }
     }
@@ -147,6 +149,7 @@ public class CharacterActionManager : MonoBehaviour
         action.Reset();
         selectedAction = action;
         UpdateActionButtonSelection();
+        UpdateActionRangeIndicator();
     }
 
     async UniTask ExecuteSelectedAction()
@@ -157,6 +160,7 @@ public class CharacterActionManager : MonoBehaviour
         await selectedAction.ExecuteAsync();
         selectedAction = null;
         UpdateActionButtonSelection();
+        UpdateActionRangeIndicator();
         UpdateManaDisplay(activeCharacterRunTimeId);
         UpdateActionButtonAffordability();
     }
@@ -183,6 +187,19 @@ public class CharacterActionManager : MonoBehaviour
     void UpdateActionButtonAffordability()
     {
         activeGameView.UpdateActionButtonAffordability(characterManager.GetCurrentMana(activeCharacterRunTimeId));
+    }
+
+    void UpdateActionRangeIndicator()
+    {
+        if (selectedAction != null)
+            characterManager.SetActionRangeIndicator(activeCharacterRunTimeId, selectedAction.ActionRange, true);
+        else
+            HideActionRangeIndicator();
+    }
+
+    void HideActionRangeIndicator()
+    {
+        characterManager.SetActionRangeIndicator(activeCharacterRunTimeId, 0f, false);
     }
 
     #endregion
