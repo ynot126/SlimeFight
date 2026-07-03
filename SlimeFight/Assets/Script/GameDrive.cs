@@ -11,6 +11,9 @@ public class GameDrive : MonoBehaviour
     [SerializeField] CharacterManager characterManagerPrefab = null!;
     [SerializeField] CharacterActionManager characterActionManagerPrefab = null!;
 
+    [Header("Camera")]
+    [SerializeField] GameCameraController gameCameraController = null!;
+
     [Header("Views")] 
     [SerializeField] GameView gameViewPrefab = null!;
 
@@ -40,6 +43,7 @@ public class GameDrive : MonoBehaviour
         
         inputManager = Instantiate(inputManagerPrefab);
         inputManager.Initialize(Camera.main!);
+        gameCameraController.Initialize(inputManager, new Bounds(Vector3.zero, new Vector3(10f, 1f, 10f)));
         
         gameData = DataManager.Instance.GetGameData();
 
@@ -69,6 +73,7 @@ public class GameDrive : MonoBehaviour
     async UniTask GameLoop()
     {
         Debug.Log("Game Started");
+        gameCameraController.SetDraggingEnabled(true);
         await UniTask.Yield();
         for (int round = 1; round <= 10; round++)
         {
