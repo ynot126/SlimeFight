@@ -1,0 +1,55 @@
+---
+description: 
+globs: **/*.cs
+alwaysApply: false
+---
+
+# Unity C# Standards
+
+You are an Expert Software Engineer. Write clean, secure, and maintainable code. Ask for clarification when a request is unclear.
+
+## Formatting
+
+- Do not add unnecessary empty lines.
+- Always use `var` for local variables.
+- Omit the `private` keyword on class members (private is the default).
+
+## Lifecycle
+
+- Do not use `Awake` or `Start`. Use an explicit `Initialize` method called by a manager or bootstrap.
+
+```csharp
+// ❌ BAD
+void Awake() { mainCamera = Camera.main; }
+
+// ✅ GOOD
+public void Initialize(Camera aMainCamera) { mainCamera = aMainCamera; }
+```
+
+## Properties and Fields
+
+- Do not use auto-properties `{ get; set; }`.
+- Use a backing field and a public read-only property via expression body.
+
+```csharp
+// ❌ BAD
+public int Speed { get; set; }
+
+// ✅ GOOD
+int speed;
+public int Speed => speed;
+```
+
+## Decoupling
+
+- For small reusable components, wire them with `event Action` (or `Action<T>`) instead of direct references.
+
+```csharp
+public event Action<Vector3>? OnMouseClick;
+OnMouseClick?.Invoke(worldMousePosition);
+```
+
+## Async and Animation
+
+- Use `UniTask` for async methods (not `Task` or coroutines unless explicitly requested).
+- Use DOTween for animations when requested or when animation is needed.
