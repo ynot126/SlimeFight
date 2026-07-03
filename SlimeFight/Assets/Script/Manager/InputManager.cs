@@ -23,30 +23,46 @@ public class InputManager : MonoBehaviour
 
    public void Update()
    {
-      if (Input.GetMouseButtonUp(1) && isDragging)
+      var overUI = IsPointerOverUI();
+
+      if (Input.GetMouseButtonUp(0) && isDragging)
       {
          isDragging = false;
          OnDragEnd?.Invoke();
       }
 
-      var overUI = EventSystem.current.IsPointerOverGameObject();
-      if (!TryGetGroundMousePosition(out var worldMousePosition)) return;
-
-      if (!overUI)
+      if (overUI)
       {
-         currentMousePosition = worldMousePosition;
-         OnMousePositionUpdate?.Invoke(worldMousePosition);
-         if (Input.GetMouseButtonDown(0))
-            OnMouseClick?.Invoke(worldMousePosition);
+         if (isDragging)
+         {
+            isDragging = false;
+            OnDragEnd?.Invoke();
+         }
+         return;
       }
 
-      if (Input.GetMouseButtonDown(0) && !overUI)
+      if (!TryGetGroundMousePosition(out var worldMousePosition)) return;
+
+      currentMousePosition = worldMousePosition;
+      OnMousePositionUpdate?.Invoke(worldMousePosition);
+
+      if (Input.GetMouseButtonDown(0))
+         OnMouseClick?.Invoke(worldMousePosition);
+
+      if (Input.GetMouseButtonDown(0))
       {
          isDragging = true;
          OnDragStart?.Invoke(worldMousePosition);
       }
       if (isDragging && Input.GetMouseButton(0))
          OnDragUpdate?.Invoke(worldMousePosition);
+   }
+
+   bool IsPointerOverUI()
+   {
+      var eventSystem = EventSystem.current;
+      if (eventSystem == null) return false;
+      return eventSystem.IsPointerOverGameObject(-1);
    }
 
    bool TryGetGroundMousePosition(out Vector3 position)
