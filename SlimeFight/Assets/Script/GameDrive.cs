@@ -66,6 +66,7 @@ public class GameDrive : MonoBehaviour
         
         await mapManager.CreateMap();
         await characterManager.SpawnCharacter();
+        await characterManager.SpawnEnemy();
         await GameLoop();
     }
 

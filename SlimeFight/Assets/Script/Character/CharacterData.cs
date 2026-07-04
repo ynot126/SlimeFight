@@ -4,8 +4,6 @@ using System.Collections.Generic;
 [Serializable]
 public class CharacterData
 {
-    public CharacterType type;
-
     // character stat
     public EntityStat stat;
     
@@ -16,10 +14,20 @@ public class CharacterData
 [Serializable]
 public class EntityStat
 {
-    public int vitality = 5;
-    public int might = 5;
-    public int focus = 5;
-    public int armour = 0;
-    public int speed = 5;
-    public int spirit = 5;
+    public int vitality;
+    public int might ;
+    public int focus ;
+    public int armour ;
+    public int speed ;
+    public int spirit;
+
+    public EntityStat(int aVitality, int aMight, int aFocus, int aArmour, int aSpeed, int aSpirit)
+    {
+        vitality = aVitality;
+        might = aMight;
+        focus = aFocus;
+        armour = aArmour;
+        speed = aSpeed;
+        spirit = aSpirit;
+    }
 }

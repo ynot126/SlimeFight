@@ -90,12 +90,20 @@ public class CharacterManager : MonoBehaviour
     {
         await UniTask.Yield();
         foreach (var data in gameData.playerCharacters)
-            SpawnCharacter(data , currentIdCounter++);
+            SpawnCharacter(data, currentIdCounter++);
+    }
+
+    public async UniTask SpawnEnemy()
+    {
+        await UniTask.Yield();
+        var enemyData = EnemyLibrary.GetEnemy("Testing");
+        SpawnEnemy(enemyData, currentIdCounter++);
     }
 
     public List<int> GetMovementOrder()
     {
         return characters.Values
+            .Where(c => c.Type == CharacterType.Player)
             .OrderByDescending(c => c.Speed)
             .Select(c => c.RunTimeId)
             .ToList();
@@ -124,14 +132,20 @@ public class CharacterManager : MonoBehaviour
 
     public bool TrySpendMana(int runTimeId, int cost) => characters[runTimeId].TrySpendMana(cost);
     void SpawnCharacter(CharacterData data, int runTimeId)
+        => SpawnEntity(data.stat, CharacterType.Player, runTimeId, data.actionIds);
+
+    void SpawnEnemy(EnemyData data, int runTimeId)
+        => SpawnEntity(data.stat, CharacterType.Enemy, runTimeId, new List<string>());
+
+    void SpawnEntity(EntityStat stat, CharacterType type, int runTimeId, IReadOnlyList<string> actionIds)
     {
         var mapPosition = mapManager.GetRandomPositionOnMap();
         var spawnPosition = new Vector3(mapPosition.x, 0f, mapPosition.z);
         var character = Instantiate(characterPrefab, CharacterParent);
         character.transform.SetPositionAndRotation(spawnPosition, Quaternion.identity);
-        character.Initialize(data.stat, data.type, runTimeId);
+        character.Initialize(stat, type, runTimeId);
         characters[runTimeId] = character;
-        characterActions[runTimeId] = new List<string>(data.actionIds);
+        characterActions[runTimeId] = new List<string>(actionIds);
 
         var canvasRect = (RectTransform)characterStatusCanvas.transform;
         var statusCanvas = Instantiate(characterStatusCanvasPrefab, canvasRect);
