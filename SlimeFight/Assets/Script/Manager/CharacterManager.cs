@@ -8,6 +8,8 @@ using UnityEngine;
 
 public class CharacterManager : MonoBehaviour
 {
+    #region Serialized Fields
+
     [SerializeField] Transform CharacterParent = null!;
     [SerializeField] Character characterPrefab = null!;
     [SerializeField] CharacterStatusCanvas characterStatusCanvasPrefab = null!;
@@ -16,19 +18,30 @@ public class CharacterManager : MonoBehaviour
     [SerializeField] float characterSelectionRadius = 0.75f;
     [SerializeField] float statusCanvasHoverDelay = 0.2f;
 
-    readonly Dictionary<int, Character> characters = new Dictionary<int, Character>();
-    readonly Dictionary<int, CharacterStatusCanvas> statusCanvases = new Dictionary<int, CharacterStatusCanvas>();
-    readonly Dictionary<int, List<string>> characterActions = new Dictionary<int, List<string>>();
-    
-    int currentIdCounter = 1;
-    
+    #endregion
+
+    #region Dependencies
+
     GameData gameData = null!;
     MapManager mapManager = null!;
     InputManager inputManager = null!;
     Camera mainCamera = null!;
+
+    #endregion
+
+    #region Runtime State
+
+    readonly Dictionary<int, Character> characters = new();
+    readonly Dictionary<int, CharacterStatusCanvas> statusCanvases = new();
+    readonly Dictionary<int, List<string>> characterActions = new();
+    int currentIdCounter = 1;
     Character? hoveredCharacter;
     CharacterStatusCanvas? hoveredStatusCanvas;
     CancellationTokenSource? hoverDelayCts;
+
+    #endregion
+
+    #region Lifecycle
 
     public void Initialize(GameData aGameData, MapManager aMapManager, InputManager aInputManager, Camera aMainCamera)
     {
@@ -44,6 +57,69 @@ public class CharacterManager : MonoBehaviour
         CancelHoverDelay();
         inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
     }
+
+    #endregion
+
+    #region Spawning
+
+    public async UniTask SpawnCharacter()
+    {
+        await UniTask.Yield();
+        foreach (var data in gameData.playerCharacters)
+            SpawnCharacter(data, currentIdCounter++);
+    }
+
+    public async UniTask SpawnEnemy()
+    {
+        await UniTask.Yield();
+        var enemyData = EnemyLibrary.GetEnemy("Testing");
+        SpawnEnemy(enemyData, currentIdCounter++);
+    }
+
+    void SpawnCharacter(CharacterData data, int runTimeId)
+        => SpawnEntity(data.stat, CharacterType.Player, runTimeId, data.actionIds);
+
+    void SpawnEnemy(EnemyData data, int runTimeId)
+        => SpawnEntity(data.stat, CharacterType.Enemy, runTimeId, new List<string>());
+
+    void SpawnEntity(EntityStat stat, CharacterType type, int runTimeId, IReadOnlyList<string> actionIds)
+    {
+        var mapPosition = mapManager.GetRandomPositionOnMap();
+        var spawnPosition = new Vector3(mapPosition.x, 0f, mapPosition.z);
+        var character = Instantiate(characterPrefab, CharacterParent);
+        character.transform.SetPositionAndRotation(spawnPosition, Quaternion.identity);
+        character.Initialize(stat, type, runTimeId);
+        characters[runTimeId] = character;
+        characterActions[runTimeId] = new List<string>(actionIds);
+
+        var canvasRect = (RectTransform)characterStatusCanvas.transform;
+        var statusCanvas = Instantiate(characterStatusCanvasPrefab, canvasRect);
+        statusCanvas.Initialize(canvasRect);
+        statusCanvases[runTimeId] = statusCanvas;
+
+        character.OnDeath += () => HandleCharacterDeath(runTimeId, statusCanvas);
+    }
+
+    void HandleCharacterDeath(int runTimeId, CharacterStatusCanvas statusCanvas)
+    {
+        if (hoveredCharacter?.RunTimeId == runTimeId)
+        {
+            CancelHoverDelay();
+            hoveredCharacter = null;
+        }
+
+        if (hoveredStatusCanvas == statusCanvas)
+            hoveredStatusCanvas = null;
+
+        Destroy(statusCanvas.gameObject);
+        statusCanvases.Remove(runTimeId);
+        characters.Remove(runTimeId);
+        characterActions.Remove(runTimeId);
+    }
+
+    #endregion
+
+    #region Hover & Status Canvas
 
     void HandleMousePositionUpdate(Vector3 position)
     {
@@ -86,19 +162,9 @@ public class CharacterManager : MonoBehaviour
         }
     }
 
-    public async UniTask SpawnCharacter()
-    {
-        await UniTask.Yield();
-        foreach (var data in gameData.playerCharacters)
-            SpawnCharacter(data, currentIdCounter++);
-    }
+    #endregion
 
-    public async UniTask SpawnEnemy()
-    {
-        await UniTask.Yield();
-        var enemyData = EnemyLibrary.GetEnemy("Testing");
-        SpawnEnemy(enemyData, currentIdCounter++);
-    }
+    #region Turn & Actions
 
     public List<int> GetMovementOrder()
     {
@@ -109,18 +175,18 @@ public class CharacterManager : MonoBehaviour
             .ToList();
     }
 
-    public void SetCharacterReadyAction(bool val , int runTimeId)
-    {
-        characters[runTimeId].SetCharacterReadyAction(val);
-    }
+    public void SetCharacterReadyAction(bool val, int runTimeId)
+        => characters[runTimeId].SetCharacterReadyAction(val);
 
     public void SetActionRangeIndicator(int runTimeId, float range, bool visible)
-    {
-        characters[runTimeId].SetActionRangeIndicator(range, visible);
-    }
+        => characters[runTimeId].SetActionRangeIndicator(range, visible);
 
     public IReadOnlyList<string> GetCharacterActions(int runTimeId)
         => characterActions[runTimeId];
+
+    #endregion
+
+    #region Mana
 
     public void RefillMana(int runTimeId) => characters[runTimeId].RefillMana();
 
@@ -131,45 +197,10 @@ public class CharacterManager : MonoBehaviour
     public bool CanAffordMana(int runTimeId, int cost) => characters[runTimeId].CanAffordMana(cost);
 
     public bool TrySpendMana(int runTimeId, int cost) => characters[runTimeId].TrySpendMana(cost);
-    void SpawnCharacter(CharacterData data, int runTimeId)
-        => SpawnEntity(data.stat, CharacterType.Player, runTimeId, data.actionIds);
 
-    void SpawnEnemy(EnemyData data, int runTimeId)
-        => SpawnEntity(data.stat, CharacterType.Enemy, runTimeId, new List<string>());
+    #endregion
 
-    void SpawnEntity(EntityStat stat, CharacterType type, int runTimeId, IReadOnlyList<string> actionIds)
-    {
-        var mapPosition = mapManager.GetRandomPositionOnMap();
-        var spawnPosition = new Vector3(mapPosition.x, 0f, mapPosition.z);
-        var character = Instantiate(characterPrefab, CharacterParent);
-        character.transform.SetPositionAndRotation(spawnPosition, Quaternion.identity);
-        character.Initialize(stat, type, runTimeId);
-        characters[runTimeId] = character;
-        characterActions[runTimeId] = new List<string>(actionIds);
-
-        var canvasRect = (RectTransform)characterStatusCanvas.transform;
-        var statusCanvas = Instantiate(characterStatusCanvasPrefab, canvasRect);
-        statusCanvas.Initialize(canvasRect);
-        statusCanvases[runTimeId] = statusCanvas;
-
-        character.OnDeath += () =>
-        {
-            if (statusCanvases.TryGetValue(runTimeId, out var canvas))
-            {
-                if (hoveredCharacter?.RunTimeId == runTimeId)
-                {
-                    CancelHoverDelay();
-                    hoveredCharacter = null;
-                }
-                if (hoveredStatusCanvas == canvas)
-                    hoveredStatusCanvas = null;
-                Destroy(canvas.gameObject);
-                statusCanvases.Remove(runTimeId);
-            }
-            characters.Remove(runTimeId);
-            characterActions.Remove(runTimeId);
-        };
-    }
+    #region Movement
 
     public async UniTask CharacterMoveToPosition(int runTimeId, Vector3 position)
     {
@@ -182,6 +213,10 @@ public class CharacterManager : MonoBehaviour
         var duration = distance / moveSpeed;
         await characterTransform.DOMove(end, duration).SetEase(Ease.Linear).ToUniTask();
     }
+
+    #endregion
+
+    #region Targeting & Combat
 
     public bool TryGetCharacterAtPosition(Vector3 position, int excludeRunTimeId, out Character character)
     {
@@ -224,5 +259,6 @@ public class CharacterManager : MonoBehaviour
         if (!characters.TryGetValue(sourceRunTimeId, out var source)) return false;
         return Vector3.Distance(source.Position, position) <= range;
     }
+
+    #endregion
 }
-    

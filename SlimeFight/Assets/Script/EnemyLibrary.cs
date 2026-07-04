@@ -1,9 +1,8 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
-public class EnemyLibrary
+public static class EnemyLibrary
 {
     static readonly Dictionary<string, Func<EnemyData>> enemyFactory = new Dictionary<string, Func<EnemyData>>();
     static readonly Dictionary<string, EnemyData> enemyCache = new Dictionary<string, EnemyData>();
