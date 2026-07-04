@@ -18,6 +18,7 @@ public class CharacterManager : MonoBehaviour
 
     readonly Dictionary<int, Character> characters = new Dictionary<int, Character>();
     readonly Dictionary<int, CharacterStatusCanvas> statusCanvases = new Dictionary<int, CharacterStatusCanvas>();
+    readonly Dictionary<int, List<string>> characterActions = new Dictionary<int, List<string>>();
     
     int currentIdCounter = 1;
     
@@ -111,7 +112,7 @@ public class CharacterManager : MonoBehaviour
     }
 
     public IReadOnlyList<string> GetCharacterActions(int runTimeId)
-        => characters[runTimeId].Actions;
+        => characterActions[runTimeId];
 
     public void RefillMana(int runTimeId) => characters[runTimeId].RefillMana();
 
@@ -128,8 +129,9 @@ public class CharacterManager : MonoBehaviour
         var spawnPosition = new Vector3(mapPosition.x, 0f, mapPosition.z);
         var character = Instantiate(characterPrefab, CharacterParent);
         character.transform.SetPositionAndRotation(spawnPosition, Quaternion.identity);
-        character.Initialize(data , runTimeId);
+        character.Initialize(data.stat, data.type, runTimeId);
         characters[runTimeId] = character;
+        characterActions[runTimeId] = new List<string>(data.actionIds);
 
         var canvasRect = (RectTransform)characterStatusCanvas.transform;
         var statusCanvas = Instantiate(characterStatusCanvasPrefab, canvasRect);
@@ -151,6 +153,7 @@ public class CharacterManager : MonoBehaviour
                 statusCanvases.Remove(runTimeId);
             }
             characters.Remove(runTimeId);
+            characterActions.Remove(runTimeId);
         };
     }
 

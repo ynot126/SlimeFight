@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Character : MonoBehaviour
@@ -16,7 +15,6 @@ public class Character : MonoBehaviour
     int currentMana;
     int maxMana;
     int speed;
-    List<string> actions = new();
     
     // public field data
     public int RunTimeId => runTimeId;
@@ -27,21 +25,19 @@ public class Character : MonoBehaviour
     public int MaxHealth => maxHealth;
     public int CurrentMana => currentMana;
     public int MaxMana => maxMana;
-    public IReadOnlyList<string> Actions => actions;
     
     // event function
     public event Action? OnDeath;
 
-    public void Initialize(CharacterData characterData, int aRunTimeID)
+    public void Initialize(EntityStat stat, CharacterType aType, int aRunTimeId)
     {
-        maxHealth = characterData.vitality *10;
+        maxHealth = stat.vitality *10;
         currentHealth = maxHealth;
-        maxMana = characterData.spirit;
+        maxMana = stat.spirit;
         currentMana = maxMana;
-        speed = characterData.speed;
-        runTimeId = aRunTimeID;
-        type = characterData.type;
-        actions = new List<string>(characterData.actionIds);
+        speed = stat.speed;
+        runTimeId = aRunTimeId;
+        type = aType;
 
         SetCharacterReadyAction(false);
         actionRangeIndicator.SetVisible(false);
