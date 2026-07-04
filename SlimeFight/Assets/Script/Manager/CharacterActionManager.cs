@@ -78,16 +78,18 @@ public class CharacterActionManager : MonoBehaviour
         foreach (var actionId in characterManager.GetCharacterActions(runTimeId))
             availableActions.Add(CreateAction(actionId, runTimeId));
 
-        activeGameView.SpawnActionButtons(availableActions, SelectAction);
+        activeGameView.SpawnActionButtons(availableActions);
         activeGameView.SetShowCharacterActionOption(true);
         UpdateActionButtonSelection();
         UpdateActionButtonAffordability();
         characterManager.SetCharacterReadyAction(true, runTimeId);
+        activeGameView.OnActionSelected += SelectAction;
         activeGameView.OnEndTurnButtonPressed += HandleEndTurnButtonPressed;
     }
 
     void EndTurn()
     {
+        activeGameView.OnActionSelected -= SelectAction;
         activeGameView.OnEndTurnButtonPressed -= HandleEndTurnButtonPressed;
         HideActionRangeIndicator();
         characterManager.SetCharacterReadyAction(false, activeCharacterRunTimeId);

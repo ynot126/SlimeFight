@@ -21,20 +21,21 @@ public class GameView : BaseView
     readonly List<(ActionButton button, CharacterAction action)> spawnedActionButtons = new();
 
     public event Action? OnEndTurnButtonPressed;
+    public event Action<CharacterAction>? OnActionSelected;
 
     public void Initialize()
     {
         endTurnButton.onClick.AddListener(() => OnEndTurnButtonPressed?.Invoke());
     }
 
-    public void SpawnActionButtons(IReadOnlyList<CharacterAction> actions, Action<CharacterAction> onActionSelected)
+    public void SpawnActionButtons(IReadOnlyList<CharacterAction> actions)
     {
         ClearActionButtons();
         foreach (var action in actions)
         {
             var actionButton = Instantiate(actionButtonPrefab, actionButtonContainer);
             actionButton.Initialize(action);
-            actionButton.OnActionButtonPressed += () => onActionSelected(action);
+            actionButton.OnActionButtonPressed += () => OnActionSelected?.Invoke(action);
             spawnedActionButtons.Add((actionButton, action));
         }
     }
@@ -46,7 +47,7 @@ public class GameView : BaseView
         spawnedActionButtons.Clear();
     }
 
-    public void UpdateActionButtonSelection(CharacterAction? selectedAction)
+    public void UpdateActionButtonSelection(CharacterAction selectedAction)
     {
         foreach (var (button, action) in spawnedActionButtons)
             button.SetButtonSelectState(action == selectedAction);
