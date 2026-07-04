@@ -4,13 +4,6 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-public enum CharacterTurnState
-{
-    Inactive,
-    PlanningAction,
-    ExecutingAction,
-}
-
 public class CharacterActionManager : MonoBehaviour
 {
     [SerializeField] TargetSelectCursorIcon targetSelectCursorIconPrefab = null!;
@@ -20,16 +13,16 @@ public class CharacterActionManager : MonoBehaviour
     MapManager mapManager = null!;
     InputManager inputManager = null!;
     TargetSelectCursorIcon targetSelectCursorIcon = null!;
-    
-    //Turn State
-    CharacterTurnState currentState = CharacterTurnState.Inactive;
-    UniTaskCompletionSource? stateCompletionSource;
+
+    // Turn State
+    UniTaskCompletionSource? planningCompletionSource;
     bool isEndTurnRequested;
+    bool isAwaitingActionConfirmation;
 
     int activeCharacterRunTimeId;
     GameView activeGameView = null!;
-    
-    //Action State
+
+    // Action State
     readonly List<CharacterAction> availableActions = new();
     CharacterAction? selectedAction;
 
@@ -46,7 +39,7 @@ public class CharacterActionManager : MonoBehaviour
     {
         inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
     }
-    
+
     #region Turn Lifecycle
 
     public async UniTask RunCharacterTurn(int runTimeId, GameView gameView)
@@ -55,10 +48,10 @@ public class CharacterActionManager : MonoBehaviour
 
         while (!isEndTurnRequested)
         {
-            await RunState(CharacterTurnState.PlanningAction);
+            await WaitForActionConfirmation();
             if (isEndTurnRequested) break;
 
-            await RunState(CharacterTurnState.ExecutingAction);
+            await ExecuteSelectedAction();
         }
 
         EndTurn();
@@ -100,65 +93,44 @@ public class CharacterActionManager : MonoBehaviour
 
         activeCharacterRunTimeId = 0;
         activeGameView = null!;
-        currentState = CharacterTurnState.Inactive;
         selectedAction = null;
     }
 
     #endregion
 
-    #region State Machine
+    #region Planning Phase
 
-    async UniTask RunState(CharacterTurnState state)
+    async UniTask WaitForActionConfirmation()
     {
-        currentState = state;
-        OnStateEnter(state);
+        isAwaitingActionConfirmation = true;
+        inputManager.OnMouseClick += HandleMouseClick;
+        inputManager.OnMousePositionUpdate += HandleMousePositionUpdate;
 
-        if (state == CharacterTurnState.ExecutingAction)
-            await ExecuteSelectedAction();
-        else
+        try
         {
-            stateCompletionSource = new UniTaskCompletionSource();
-            await stateCompletionSource.Task;
-            stateCompletionSource = null;
+            planningCompletionSource = new UniTaskCompletionSource();
+            await planningCompletionSource.Task;
         }
-
-        OnStateExit(state);
-        currentState = CharacterTurnState.Inactive;
-    }
-
-    void OnStateEnter(CharacterTurnState state)
-    {
-        switch (state)
+        finally
         {
-            case CharacterTurnState.PlanningAction:
-                inputManager.OnMouseClick += HandleMouseClick;
-                inputManager.OnMousePositionUpdate += HandleMousePositionUpdate;
-                break;
+            isAwaitingActionConfirmation = false;
+            inputManager.OnMouseClick -= HandleMouseClick;
+            inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
+            HideActionRangeIndicator();
+            HideTargetSelectCursor();
+            planningCompletionSource = null;
         }
     }
 
-    void OnStateExit(CharacterTurnState state)
-    {
-        switch (state)
-        {
-            case CharacterTurnState.PlanningAction:
-                inputManager.OnMouseClick -= HandleMouseClick;
-                inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
-                HideActionRangeIndicator();
-                HideTargetSelectCursor();
-                break;
-        }
-    }
-
-    void CompleteCurrentState() => stateCompletionSource?.TrySetResult();
+    void CompletePlanning() => planningCompletionSource?.TrySetResult();
 
     #endregion
 
-    #region Action Selection & Execution
+    #region Action Selection
 
     void SelectAction(CharacterAction action)
     {
-        if (currentState != CharacterTurnState.PlanningAction) return;
+        if (!isAwaitingActionConfirmation) return;
         if (!characterManager.CanAffordMana(activeCharacterRunTimeId, action.ManaCost)) return;
 
         action.Reset();
@@ -173,7 +145,7 @@ public class CharacterActionManager : MonoBehaviour
             case AutoTargetSelectStrategy:
                 HideTargetSelectCursor();
                 if (selectedAction.TryAutoSelectTarget())
-                    CompleteCurrentState();
+                    CompletePlanning();
                 break;
         }
     }
@@ -253,24 +225,23 @@ public class CharacterActionManager : MonoBehaviour
 
     void HandleMousePositionUpdate(Vector3 mousePosition)
     {
-        if (currentState != CharacterTurnState.PlanningAction) return;
         if (selectedAction?.TargetStrategy is not MouseTargetSelectStrategy) return;
         UpdateTargetSelectCursor(mousePosition);
     }
 
     void HandleMouseClick(Vector3 mousePosition)
     {
-        if (currentState != CharacterTurnState.PlanningAction || selectedAction == null) return;
+        if (selectedAction == null) return;
         if (selectedAction.TargetStrategy is not MouseTargetSelectStrategy) return;
         if (!selectedAction.TrySelectTarget(mousePosition)) return;
 
-        CompleteCurrentState();
+        CompletePlanning();
     }
 
     void HandleEndTurnButtonPressed()
     {
         isEndTurnRequested = true;
-        CompleteCurrentState();
+        CompletePlanning();
     }
 
     #endregion
