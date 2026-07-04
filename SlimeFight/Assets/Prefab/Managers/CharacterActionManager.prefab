@@ -44,3 +44,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51bc80d5ab2eb4a478fcee9859be77d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  targetSelectCursorIconPrefab: {fileID: 522984662298929326, guid: 6c5c8c87c9315ba4baac55dda9668e2e, type: 3}

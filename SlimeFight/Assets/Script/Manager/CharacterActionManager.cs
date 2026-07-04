@@ -13,10 +13,13 @@ public enum CharacterTurnState
 
 public class CharacterActionManager : MonoBehaviour
 {
+    [SerializeField] TargetSelectCursorIcon targetSelectCursorIconPrefab = null!;
+
     // Managers
     CharacterManager characterManager = null!;
     MapManager mapManager = null!;
     InputManager inputManager = null!;
+    TargetSelectCursorIcon targetSelectCursorIcon = null!;
     
     //Turn State
     CharacterTurnState currentState = CharacterTurnState.Inactive;
@@ -35,6 +38,13 @@ public class CharacterActionManager : MonoBehaviour
         characterManager = aCharacterManager;
         mapManager = aMapManager;
         inputManager = aInputManager;
+        targetSelectCursorIcon = Instantiate(targetSelectCursorIconPrefab);
+        targetSelectCursorIcon.SetVisible(false);
+    }
+
+    void OnDestroy()
+    {
+        inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
     }
     
     #region Turn Lifecycle
@@ -120,6 +130,7 @@ public class CharacterActionManager : MonoBehaviour
         {
             case CharacterTurnState.PlanningAction:
                 inputManager.OnMouseClick += HandleMouseClick;
+                inputManager.OnMousePositionUpdate += HandleMousePositionUpdate;
                 break;
         }
     }
@@ -130,7 +141,9 @@ public class CharacterActionManager : MonoBehaviour
         {
             case CharacterTurnState.PlanningAction:
                 inputManager.OnMouseClick -= HandleMouseClick;
+                inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
                 HideActionRangeIndicator();
+                HideTargetSelectCursor();
                 break;
         }
     }
@@ -150,6 +163,7 @@ public class CharacterActionManager : MonoBehaviour
         selectedAction = action;
         UpdateActionButtonSelection();
         UpdateActionRangeIndicator();
+        UpdateTargetSelectCursor(inputManager.CurrentMousePosition);
     }
 
     async UniTask ExecuteSelectedAction()
@@ -161,6 +175,7 @@ public class CharacterActionManager : MonoBehaviour
         selectedAction = null;
         UpdateActionButtonSelection();
         UpdateActionRangeIndicator();
+        UpdateTargetSelectCursor(inputManager.CurrentMousePosition);
         UpdateManaDisplay(activeCharacterRunTimeId);
         UpdateActionButtonAffordability();
     }
@@ -202,9 +217,33 @@ public class CharacterActionManager : MonoBehaviour
         characterManager.SetActionRangeIndicator(activeCharacterRunTimeId, 0f, false);
     }
 
+    void UpdateTargetSelectCursor(Vector3 mousePosition)
+    {
+        if (selectedAction == null)
+        {
+            HideTargetSelectCursor();
+            return;
+        }
+
+        targetSelectCursorIcon.SetPosition(mousePosition);
+        targetSelectCursorIcon.SetValidTargetVisual(selectedAction.IsValidTargetAt(mousePosition));
+        targetSelectCursorIcon.SetVisible(true);
+    }
+
+    void HideTargetSelectCursor()
+    {
+        targetSelectCursorIcon.SetVisible(false);
+    }
+
     #endregion
 
     #region Event Handlers
+
+    void HandleMousePositionUpdate(Vector3 mousePosition)
+    {
+        if (currentState != CharacterTurnState.PlanningAction) return;
+        UpdateTargetSelectCursor(mousePosition);
+    }
 
     void HandleMouseClick(Vector3 mousePosition)
     {

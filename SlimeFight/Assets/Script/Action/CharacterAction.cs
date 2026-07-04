@@ -29,6 +29,9 @@ public class CharacterAction
         selectedTarget = default;
     }
 
+    public bool IsValidTargetAt(Vector3 mousePosition)
+        => data.TargetStrategy.TrySelectTarget(context, mousePosition, out _);
+
     public bool TrySelectTarget(Vector3 mousePosition)
     {
         if (!data.TargetStrategy.TrySelectTarget(context, mousePosition, out var target))
