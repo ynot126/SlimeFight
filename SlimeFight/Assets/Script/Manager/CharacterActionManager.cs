@@ -6,13 +6,12 @@ using UnityEngine;
 
 public class CharacterActionManager : MonoBehaviour
 {
-    [SerializeField] TargetSelectCursorIcon targetSelectCursorIconPrefab = null!;
+    [SerializeField] CharacterActionDisplay characterActionDisplayPrefab = null!;
 
     // Managers
     CharacterManager characterManager = null!;
     MapManager mapManager = null!;
     InputManager inputManager = null!;
-    TargetSelectCursorIcon targetSelectCursorIcon = null!;
 
     // Turn State
     UniTaskCompletionSource? planningCompletionSource;
@@ -31,8 +30,9 @@ public class CharacterActionManager : MonoBehaviour
         characterManager = aCharacterManager;
         mapManager = aMapManager;
         inputManager = aInputManager;
-        targetSelectCursorIcon = Instantiate(targetSelectCursorIconPrefab);
-        targetSelectCursorIcon.SetVisible(false);
+        var display = Instantiate(characterActionDisplayPrefab);
+        display.SetVisible(false);
+        characterManager.SetTargetSelectDisplay(display);
     }
 
     void OnDestroy()
@@ -117,7 +117,7 @@ public class CharacterActionManager : MonoBehaviour
             inputManager.OnMouseClick -= HandleMouseClick;
             inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
             HideActionRangeIndicator();
-            HideTargetSelectCursor();
+            selectedAction?.TargetStrategy.HideTargetDisplay();
             planningCompletionSource = null;
         }
     }
@@ -139,11 +139,11 @@ public class CharacterActionManager : MonoBehaviour
         UpdateActionRangeIndicator();
         switch (selectedAction.TargetStrategy)
         {
-            case MouseTargetSelectStrategy:
-                UpdateTargetSelectCursor(inputManager.CurrentMousePosition);
+            case MouseTargetSelectStrategy mouseStrategy:
+                mouseStrategy.UpdateTargetDisplay(inputManager.CurrentMousePosition);
                 break;
             case AutoTargetSelectStrategy:
-                HideTargetSelectCursor();
+                selectedAction.TargetStrategy.HideTargetDisplay();
                 if (selectedAction.TryAutoSelectTarget())
                     CompletePlanning();
                 break;
@@ -156,10 +156,10 @@ public class CharacterActionManager : MonoBehaviour
         if (!characterManager.TrySpendMana(activeCharacterRunTimeId, selectedAction.ManaCost)) return;
 
         await selectedAction.ExecuteAsync();
+        selectedAction.TargetStrategy.HideTargetDisplay();
         selectedAction = null;
         UpdateActionButtonSelection();
         UpdateActionRangeIndicator();
-        UpdateTargetSelectCursor(inputManager.CurrentMousePosition);
         UpdateManaDisplay(activeCharacterRunTimeId);
         UpdateActionButtonAffordability();
     }
@@ -201,32 +201,10 @@ public class CharacterActionManager : MonoBehaviour
         characterManager.SetActionRangeIndicator(activeCharacterRunTimeId, 0f, false);
     }
 
-    void UpdateTargetSelectCursor(Vector3 mousePosition)
-    {
-        if (selectedAction == null || selectedAction.TargetStrategy is not MouseTargetSelectStrategy)
-        {
-            HideTargetSelectCursor();
-            return;
-        }
-
-        targetSelectCursorIcon.SetPosition(mousePosition);
-        targetSelectCursorIcon.SetValidTargetVisual(selectedAction.IsValidTargetAt(mousePosition));
-        targetSelectCursorIcon.SetVisible(true);
-    }
-
-    void HideTargetSelectCursor()
-    {
-        targetSelectCursorIcon.SetVisible(false);
-    }
-
-    #endregion
-
-    #region Event Handlers
-
     void HandleMousePositionUpdate(Vector3 mousePosition)
     {
-        if (selectedAction?.TargetStrategy is not MouseTargetSelectStrategy) return;
-        UpdateTargetSelectCursor(mousePosition);
+        if (selectedAction?.TargetStrategy is not MouseTargetSelectStrategy mouseStrategy) return;
+        mouseStrategy.UpdateTargetDisplay(mousePosition);
     }
 
     void HandleMouseClick(Vector3 mousePosition)

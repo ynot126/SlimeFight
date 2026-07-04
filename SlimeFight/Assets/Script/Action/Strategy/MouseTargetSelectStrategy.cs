@@ -10,4 +10,17 @@ public abstract class MouseTargetSelectStrategy : BaseTargetSelectStrategy
     }
 
     public abstract bool TryGetTarget(Vector3 mousePosition, out ActionTarget target);
+
+    public void UpdateTargetDisplay(Vector3 mousePosition)
+    {
+        var display = CharacterManager.TargetSelectDisplay;
+        display.SetPosition(mousePosition);
+        display.SetValidTargetVisual(TryGetTarget(mousePosition, out _));
+        display.SetVisible(true);
+    }
+
+    public override void HideTargetDisplay()
+    {
+        CharacterManager.TargetSelectDisplay.SetVisible(false);
+    }
 }

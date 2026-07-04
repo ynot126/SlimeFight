@@ -12,6 +12,8 @@ public abstract class BaseTargetSelectStrategy
     public abstract ActionRangeType RangeType { get; }
     public abstract float Range { get; }
     public abstract bool TryGetTarget(out ActionTarget target);
+
+    public virtual void HideTargetDisplay() { }
 }
 
 public enum ActionRangeType

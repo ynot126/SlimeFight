@@ -26,6 +26,7 @@ public class CharacterManager : MonoBehaviour
     MapManager mapManager = null!;
     InputManager inputManager = null!;
     Camera mainCamera = null!;
+    CharacterActionDisplay targetSelectDisplay = null!;
 
     #endregion
 
@@ -165,6 +166,10 @@ public class CharacterManager : MonoBehaviour
     #endregion
 
     #region Turn & Actions
+
+    public void SetTargetSelectDisplay(CharacterActionDisplay display) => targetSelectDisplay = display;
+
+    public CharacterActionDisplay TargetSelectDisplay => targetSelectDisplay;
 
     public List<int> GetMovementOrder()
     {

@@ -1,7 +1,7 @@
 #nullable enable
 using UnityEngine;
 
-public class TargetSelectCursorIcon : MonoBehaviour
+public class CharacterActionDisplay : MonoBehaviour
 {
     [SerializeField] SpriteRenderer spriteRenderer = null!;
 
