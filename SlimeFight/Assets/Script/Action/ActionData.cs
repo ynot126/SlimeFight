@@ -4,12 +4,12 @@ public class ActionData
 {
     readonly string id;
     int manaCost;
-    ITargetSelectStrategy targetStrategy = null!;
+    BaseTargetSelectStrategy baseTargetStrategy = null!;
     IActionExecution execution = null!;
 
     public string Id => id;
     public int ManaCost => manaCost;
-    public ITargetSelectStrategy TargetStrategy => targetStrategy;
+    public BaseTargetSelectStrategy BaseTargetStrategy => baseTargetStrategy;
     public IActionExecution Execution => execution;
 
     public ActionData(string id)
@@ -23,9 +23,9 @@ public class ActionData
         return this;
     }
 
-    public ActionData SetTargetedStrategy(ITargetSelectStrategy strategy)
+    public ActionData SetTargetedStrategy(BaseTargetSelectStrategy strategy)
     {
-        targetStrategy = strategy;
+        baseTargetStrategy = strategy;
         return this;
     }
 

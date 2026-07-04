@@ -1,22 +1,22 @@
 #nullable enable
 using UnityEngine;
 
-public class MoveRangeStrategy : ITargetSelectStrategy
+public class MoveRangeStrategy : MouseTargetSelectStrategy
 {
     readonly ActionRangeType rangeType;
-    public ActionRangeType RangeType => rangeType;
-    public float Range => ActionLibrary.GetRange(rangeType);
+    public override ActionRangeType RangeType => rangeType;
+    public override float Range => ActionLibrary.GetRange(rangeType);
 
     public MoveRangeStrategy(ActionRangeType rangeType)
     {
         this.rangeType = rangeType;
     }
 
-    public bool TrySelectTarget(ActionContext ctx, Vector3 mousePosition, out ActionTarget target)
+    public override bool TryGetTarget(Vector3 mousePosition, out ActionTarget target)
     {
         target = default;
-        if (!ctx.MapManager.IsPositionOnMap(mousePosition)) return false;
-        if (!ctx.CharacterManager.IsWithinRange(ctx.ActiveCharacterRunTimeId, mousePosition, Range))
+        if (!MapManager.IsPositionOnMap(mousePosition)) return false;
+        if (!CharacterManager.IsWithinRange(ActiveCharacterRunTimeId, mousePosition, Range))
             return false;
 
         target = new ActionTarget(mousePosition);

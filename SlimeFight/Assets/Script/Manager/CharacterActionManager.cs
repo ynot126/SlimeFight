@@ -163,7 +163,17 @@ public class CharacterActionManager : MonoBehaviour
         selectedAction = action;
         UpdateActionButtonSelection();
         UpdateActionRangeIndicator();
-        UpdateTargetSelectCursor(inputManager.CurrentMousePosition);
+        switch (selectedAction.TargetStrategy)
+        {
+            case MouseTargetSelectStrategy:
+                UpdateTargetSelectCursor(inputManager.CurrentMousePosition);
+                break;
+            case AutoTargetSelectStrategy:
+                HideTargetSelectCursor();
+                if (selectedAction.TryAutoSelectTarget())
+                    CompleteCurrentState();
+                break;
+        }
     }
 
     async UniTask ExecuteSelectedAction()
@@ -219,7 +229,7 @@ public class CharacterActionManager : MonoBehaviour
 
     void UpdateTargetSelectCursor(Vector3 mousePosition)
     {
-        if (selectedAction == null)
+        if (selectedAction == null || selectedAction.TargetStrategy is not MouseTargetSelectStrategy)
         {
             HideTargetSelectCursor();
             return;
@@ -242,12 +252,14 @@ public class CharacterActionManager : MonoBehaviour
     void HandleMousePositionUpdate(Vector3 mousePosition)
     {
         if (currentState != CharacterTurnState.PlanningAction) return;
+        if (selectedAction?.TargetStrategy is not MouseTargetSelectStrategy) return;
         UpdateTargetSelectCursor(mousePosition);
     }
 
     void HandleMouseClick(Vector3 mousePosition)
     {
         if (currentState != CharacterTurnState.PlanningAction || selectedAction == null) return;
+        if (selectedAction.TargetStrategy is not MouseTargetSelectStrategy) return;
         if (!selectedAction.TrySelectTarget(mousePosition)) return;
 
         CompleteCurrentState();
