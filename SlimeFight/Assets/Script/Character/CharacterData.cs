@@ -5,9 +5,15 @@ using System.Collections.Generic;
 public class CharacterData
 {
     public CharacterType type;
-    public int maxHealth = -1;
-    public int speed = -1;
-    public int attackPower = 1;
-    public int maxMana = -1;
+
+    // character stat
+    public int vitality = 5;
+    public int might = 5;
+    public int focus = 5;
+    public int armour = 0;
+    public int speed = 5;
+    public int spirit = 5;
+    
+    // action
     public List<string> actionIds = new();
 }

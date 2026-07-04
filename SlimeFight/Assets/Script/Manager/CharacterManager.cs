@@ -1,6 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
@@ -13,6 +14,7 @@ public class CharacterManager : MonoBehaviour
     [SerializeField] Canvas characterStatusCanvas = null!;
     [SerializeField] float moveSpeed = 5f;
     [SerializeField] float characterSelectionRadius = 0.75f;
+    [SerializeField] float statusCanvasHoverDelay = 0.2f;
 
     readonly Dictionary<int, Character> characters = new Dictionary<int, Character>();
     readonly Dictionary<int, CharacterStatusCanvas> statusCanvases = new Dictionary<int, CharacterStatusCanvas>();
@@ -25,6 +27,7 @@ public class CharacterManager : MonoBehaviour
     Camera mainCamera = null!;
     Character? hoveredCharacter;
     CharacterStatusCanvas? hoveredStatusCanvas;
+    CancellationTokenSource? hoverDelayCts;
 
     public void Initialize(GameData aGameData, MapManager aMapManager, InputManager aInputManager, Camera aMainCamera)
     {
@@ -37,6 +40,7 @@ public class CharacterManager : MonoBehaviour
 
     void OnDestroy()
     {
+        CancelHoverDelay();
         inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
     }
 
@@ -45,16 +49,40 @@ public class CharacterManager : MonoBehaviour
         var newHovered = TryGetCharacterAtPosition(position, -1, out var character) ? character : null;
         if (newHovered == hoveredCharacter) return;
 
+        CancelHoverDelay();
         hoveredStatusCanvas?.SetVisible(false);
+        hoveredStatusCanvas = null;
         hoveredCharacter = newHovered;
-        hoveredStatusCanvas = hoveredCharacter != null && statusCanvases.TryGetValue(hoveredCharacter.RunTimeId, out var canvas)
-            ? canvas
-            : null;
-        if (hoveredStatusCanvas == null) return;
+        if (hoveredCharacter == null) return;
 
-        hoveredStatusCanvas.UpdateStatus(hoveredCharacter);
-        hoveredStatusCanvas.AnchorToWorldPosition(hoveredCharacter.Position, mainCamera);
-        hoveredStatusCanvas.SetVisible(true);
+        ShowStatusCanvasAfterHoverDelay(hoveredCharacter).Forget();
+    }
+
+    void CancelHoverDelay()
+    {
+        hoverDelayCts?.Cancel();
+        hoverDelayCts?.Dispose();
+        hoverDelayCts = null;
+    }
+
+    async UniTaskVoid ShowStatusCanvasAfterHoverDelay(Character character)
+    {
+        hoverDelayCts = new CancellationTokenSource();
+        var token = hoverDelayCts.Token;
+        try
+        {
+            await UniTask.Delay((int)(statusCanvasHoverDelay * 1000f), cancellationToken: token);
+            if (hoveredCharacter != character) return;
+            if (!statusCanvases.TryGetValue(character.RunTimeId, out var canvas)) return;
+
+            hoveredStatusCanvas = canvas;
+            hoveredStatusCanvas.UpdateStatus(character);
+            hoveredStatusCanvas.AnchorToWorldPosition(character.Position, mainCamera);
+            hoveredStatusCanvas.SetVisible(true);
+        }
+        catch (System.OperationCanceledException)
+        {
+        }
     }
 
     public async UniTask SpawnCharacter()
@@ -112,11 +140,13 @@ public class CharacterManager : MonoBehaviour
         {
             if (statusCanvases.TryGetValue(runTimeId, out var canvas))
             {
-                if (hoveredStatusCanvas == canvas)
+                if (hoveredCharacter?.RunTimeId == runTimeId)
                 {
+                    CancelHoverDelay();
                     hoveredCharacter = null;
-                    hoveredStatusCanvas = null;
                 }
+                if (hoveredStatusCanvas == canvas)
+                    hoveredStatusCanvas = null;
                 Destroy(canvas.gameObject);
                 statusCanvases.Remove(runTimeId);
             }

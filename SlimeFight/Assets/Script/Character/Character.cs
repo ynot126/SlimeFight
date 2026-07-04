@@ -16,14 +16,12 @@ public class Character : MonoBehaviour
     int currentMana;
     int maxMana;
     int speed;
-    int attackPower;
     List<string> actions = new();
     
     // public field data
     public int RunTimeId => runTimeId;
     public int Speed => speed;
     public CharacterType Type => type;
-    public int AttackPower => attackPower;
     public Vector3 Position => transform.position;
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth;
@@ -36,12 +34,11 @@ public class Character : MonoBehaviour
 
     public void Initialize(CharacterData characterData, int aRunTimeID)
     {
-        maxHealth = characterData.maxHealth;
+        maxHealth = characterData.vitality *10;
         currentHealth = maxHealth;
-        maxMana = characterData.maxMana;
+        maxMana = characterData.spirit;
         currentMana = maxMana;
         speed = characterData.speed;
-        attackPower = characterData.attackPower;
         runTimeId = aRunTimeID;
         type = characterData.type;
         actions = new List<string>(characterData.actionIds);
