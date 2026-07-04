@@ -3,12 +3,13 @@ using UnityEngine;
 
 public class EnemyInRangeStrategy : ITargetSelectStrategy
 {
-    readonly float range;
-    public float Range => range;
+    readonly ActionRangeType rangeType;
+    public ActionRangeType RangeType => rangeType;
+    public float Range => ActionLibrary.GetRange(rangeType);
 
-    public EnemyInRangeStrategy(float range)
+    public EnemyInRangeStrategy(ActionRangeType rangeType)
     {
-        this.range = range;
+        this.rangeType = rangeType;
     }
 
     public bool TrySelectTarget(ActionContext ctx, Vector3 mousePosition, out ActionTarget target)
@@ -18,7 +19,7 @@ public class EnemyInRangeStrategy : ITargetSelectStrategy
             return false;
         if (!ctx.CharacterManager.IsValidAttackTarget(ctx.ActiveCharacterRunTimeId, character.RunTimeId))
             return false;
-        if (!ctx.CharacterManager.IsWithinRange(ctx.ActiveCharacterRunTimeId, character.RunTimeId, range))
+        if (!ctx.CharacterManager.IsWithinRange(ctx.ActiveCharacterRunTimeId, character.RunTimeId, Range))
             return false;
 
         target = new ActionTarget(character.Position, character.RunTimeId);
