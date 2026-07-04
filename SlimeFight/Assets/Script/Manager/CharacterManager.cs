@@ -88,8 +88,8 @@ public class CharacterManager : MonoBehaviour
     public async UniTask SpawnCharacter()
     {
         await UniTask.Yield();
-        foreach (var data in gameData.playerCharacters) SpawnCharacter(data , currentIdCounter++);
-        foreach (var data in gameData.enemyCharacters) SpawnCharacter(data, currentIdCounter++);
+        foreach (var data in gameData.playerCharacters)
+            SpawnCharacter(data , currentIdCounter++);
     }
 
     public List<int> GetMovementOrder()

@@ -16,5 +16,4 @@ public class DataManager : Singleton<DataManager>
 public class GameData
 {
     public List<CharacterData> playerCharacters = new List<CharacterData>();
-    public List<CharacterData> enemyCharacters = new List<CharacterData>();
 }
