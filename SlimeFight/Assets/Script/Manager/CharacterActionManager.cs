@@ -8,6 +8,8 @@ public class CharacterActionManager : MonoBehaviour
 {
     [SerializeField] CharacterActionDisplay characterActionDisplayPrefab = null!;
 
+    CharacterActionDisplay targetSelectDisplay = null!;
+
     // Managers
     CharacterManager characterManager = null!;
     MapManager mapManager = null!;
@@ -30,14 +32,15 @@ public class CharacterActionManager : MonoBehaviour
         characterManager = aCharacterManager;
         mapManager = aMapManager;
         inputManager = aInputManager;
-        var display = Instantiate(characterActionDisplayPrefab);
-        display.SetVisible(false);
-        characterManager.SetTargetSelectDisplay(display);
+        targetSelectDisplay = Instantiate(characterActionDisplayPrefab);
+        targetSelectDisplay.SetVisible(false);
     }
 
     void OnDestroy()
     {
         inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
+        if (targetSelectDisplay != null)
+            Destroy(targetSelectDisplay.gameObject);
     }
 
     #region Turn Lifecycle
@@ -165,7 +168,7 @@ public class CharacterActionManager : MonoBehaviour
     }
 
     CharacterAction CreateAction(string actionId, int runTimeId)
-        => new CharacterAction(ActionLibrary.GetAction(actionId), characterManager, mapManager, runTimeId);
+        => new CharacterAction(ActionLibrary.GetAction(actionId), characterManager, mapManager, runTimeId, targetSelectDisplay);
 
     #endregion
 

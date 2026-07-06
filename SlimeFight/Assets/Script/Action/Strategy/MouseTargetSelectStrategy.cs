@@ -3,6 +3,14 @@ using UnityEngine;
 
 public abstract class MouseTargetSelectStrategy : BaseTargetSelectStrategy
 {
+    CharacterActionDisplay targetDisplay = null!;
+
+    public void Initialize(ActionContext ctx, CharacterActionDisplay display)
+    {
+        base.Initialize(ctx);
+        targetDisplay = display;
+    }
+
     public sealed override bool TryGetTarget(out ActionTarget target)
     {
         target = default;
@@ -13,14 +21,13 @@ public abstract class MouseTargetSelectStrategy : BaseTargetSelectStrategy
 
     public void UpdateTargetDisplay(Vector3 mousePosition)
     {
-        var display = CharacterManager.TargetSelectDisplay;
-        display.SetPosition(mousePosition);
-        display.SetValidTargetVisual(TryGetTarget(mousePosition, out _));
-        display.SetVisible(true);
+        targetDisplay.SetPosition(mousePosition);
+        targetDisplay.SetValidTargetVisual(TryGetTarget(mousePosition, out _));
+        targetDisplay.SetVisible(true);
     }
 
     public override void HideTargetDisplay()
     {
-        CharacterManager.TargetSelectDisplay.SetVisible(false);
+        targetDisplay.SetVisible(false);
     }
 }

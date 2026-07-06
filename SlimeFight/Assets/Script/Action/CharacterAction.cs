@@ -18,11 +18,19 @@ public class CharacterAction
 
     ActionTarget selectedTarget;
 
-    public CharacterAction(ActionData actionData, CharacterManager characterManager, MapManager mapManager, int activeCharacterRunTimeId)
+    public CharacterAction(
+        ActionData actionData,
+        CharacterManager characterManager,
+        MapManager mapManager,
+        int activeCharacterRunTimeId,
+        CharacterActionDisplay? targetSelectDisplay = null)
     {
         data = actionData;
         context = new ActionContext(characterManager, mapManager, activeCharacterRunTimeId);
-        data.BaseTargetStrategy.Initialize(context);
+        if (data.BaseTargetStrategy is MouseTargetSelectStrategy mouseStrategy && targetSelectDisplay != null)
+            mouseStrategy.Initialize(context, targetSelectDisplay);
+        else
+            data.BaseTargetStrategy.Initialize(context);
     }
 
     public void Reset()
