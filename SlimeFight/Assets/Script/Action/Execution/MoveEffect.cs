@@ -3,6 +3,6 @@ using Cysharp.Threading.Tasks;
 
 public class MoveEffect : IActionExecution
 {
-    public UniTask ExecuteAsync(ActionContext ctx, ActionTarget target)
-        => ctx.CharacterManager.CharacterMoveToPosition(ctx.ActiveCharacterRunTimeId, target.Position);
+    public UniTask ExecuteAsync(CharacterManager characterManager, MapManager mapManager, int activeCharacterRunTimeId, ActionTarget target)
+        => characterManager.CharacterMoveToPosition(activeCharacterRunTimeId, target.Position);
 }

@@ -1,33 +1,70 @@
 #nullable enable
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public abstract class MouseTargetSelectStrategy : BaseTargetSelectStrategy
 {
-    CharacterActionDisplay targetDisplay = null!;
+    UniTaskCompletionSource<List<ActionTarget>>? selectionTcs;
 
-    public void Initialize(ActionContext ctx, CharacterActionDisplay display)
+    public abstract ActionRangeType RangeType { get; }
+    public abstract float Range { get; }
+
+    public async UniTask<List<ActionTarget>?> GetTarget(CancellationToken ct)
     {
-        base.Initialize(ctx);
-        targetDisplay = display;
+        selectionTcs = new UniTaskCompletionSource<List<ActionTarget>>();
+
+        inputManager.OnMouseClick += HandleMouseClick;
+        inputManager.OnMousePositionUpdate += HandleMousePositionUpdate;
+
+        try
+        {
+            UpdateTargetDisplay(inputManager.CurrentMousePosition);
+
+            using (ct.Register(CancelSelection))
+                return await selectionTcs.Task;
+        }
+        catch (OperationCanceledException)
+        {
+            return null;
+        }
+        finally
+        {
+            inputManager.OnMouseClick -= HandleMouseClick;
+            inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
+            selectionTcs = null;
+            ClearTargetDisplay();
+        }
     }
 
-    public sealed override bool TryGetTarget(out ActionTarget target)
+    void HandleMouseClick(Vector3 position)
     {
-        target = default;
-        return false;
+        if (!IsPositionValid(position)) return;
+
+        var targetCharacterRunTimeId = -1;
+        if (characterManager.TryGetCharacterAtPosition(position, characterRunTimeId, out var foundRunTimeId))
+            targetCharacterRunTimeId = foundRunTimeId;
+
+        selectionTcs?.TrySetResult(new List<ActionTarget> { new ActionTarget(position, targetCharacterRunTimeId) });
     }
 
-    public abstract bool TryGetTarget(Vector3 mousePosition, out ActionTarget target);
-
-    public void UpdateTargetDisplay(Vector3 mousePosition)
+    void HandleMousePositionUpdate(Vector3 mousePosition)
     {
-        targetDisplay.SetPosition(mousePosition);
-        targetDisplay.SetValidTargetVisual(TryGetTarget(mousePosition, out _));
-        targetDisplay.SetVisible(true);
+        UpdateTargetDisplay(mousePosition);
     }
 
-    public override void HideTargetDisplay()
+    void CancelSelection()
     {
-        targetDisplay.SetVisible(false);
+        selectionTcs?.TrySetCanceled();
+    }
+
+    protected abstract void UpdateTargetDisplay(Vector3 mousePosition);
+    protected abstract bool IsPositionValid(Vector3 position);
+
+    protected virtual void ClearTargetDisplay()
+    {
+        characterActionDisplay.SetVisible(false);
     }
 }

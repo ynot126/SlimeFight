@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -10,22 +11,22 @@ public class CharacterActionManager : MonoBehaviour
 
     CharacterActionDisplay targetSelectDisplay = null!;
 
-    // Managers
     CharacterManager characterManager = null!;
     MapManager mapManager = null!;
     InputManager inputManager = null!;
 
-    // Turn State
-    UniTaskCompletionSource? planningCompletionSource;
     bool isEndTurnRequested;
     bool isAwaitingActionConfirmation;
 
     int activeCharacterRunTimeId;
     GameView activeGameView = null!;
 
-    // Action State
     readonly List<CharacterAction> availableActions = new();
     CharacterAction? selectedAction;
+
+    CancellationTokenSource? turnCts;
+    CancellationTokenSource? targetSelectionCts;
+    UniTaskCompletionSource? actionSelectionSource;
 
     public void Initialize(CharacterManager aCharacterManager, MapManager aMapManager, InputManager aInputManager)
     {
@@ -38,7 +39,6 @@ public class CharacterActionManager : MonoBehaviour
 
     void OnDestroy()
     {
-        inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
         if (targetSelectDisplay != null)
             Destroy(targetSelectDisplay.gameObject);
     }
@@ -106,26 +106,55 @@ public class CharacterActionManager : MonoBehaviour
     async UniTask WaitForActionConfirmation()
     {
         isAwaitingActionConfirmation = true;
-        inputManager.OnMouseClick += HandleMouseClick;
-        inputManager.OnMousePositionUpdate += HandleMousePositionUpdate;
+        turnCts = new CancellationTokenSource();
 
         try
         {
-            planningCompletionSource = new UniTaskCompletionSource();
-            await planningCompletionSource.Task;
+            while (!isEndTurnRequested)
+            {
+                if (selectedAction == null)
+                {
+                    actionSelectionSource = new UniTaskCompletionSource();
+                    await actionSelectionSource.Task;
+                    actionSelectionSource = null;
+                    if (isEndTurnRequested) return;
+                }
+
+                if (selectedAction!.TargetStrategy is AutoTargetSelectStrategy)
+                    throw new NotImplementedException("AutoTargetSelectStrategy is not implemented yet.");
+
+                if (selectedAction.TargetStrategy is not MouseTargetSelectStrategy mouseStrategy)
+                    return;
+
+                targetSelectionCts?.Cancel();
+                targetSelectionCts?.Dispose();
+                targetSelectionCts = CancellationTokenSource.CreateLinkedTokenSource(turnCts.Token);
+
+                var result = await mouseStrategy.GetTarget(targetSelectionCts.Token);
+
+                if (isEndTurnRequested) return;
+
+                if (result != null)
+                {
+                    selectedAction.SetSelectedTargets(result);
+                    return;
+                }
+            }
         }
         finally
         {
             isAwaitingActionConfirmation = false;
-            inputManager.OnMouseClick -= HandleMouseClick;
-            inputManager.OnMousePositionUpdate -= HandleMousePositionUpdate;
+            actionSelectionSource?.TrySetCanceled();
+            actionSelectionSource = null;
+            targetSelectionCts?.Cancel();
+            targetSelectionCts?.Dispose();
+            targetSelectionCts = null;
+            turnCts?.Cancel();
+            turnCts?.Dispose();
+            turnCts = null;
             HideActionRangeIndicator();
-            selectedAction?.TargetStrategy.HideTargetDisplay();
-            planningCompletionSource = null;
         }
     }
-
-    void CompletePlanning() => planningCompletionSource?.TrySetResult();
 
     #endregion
 
@@ -136,21 +165,13 @@ public class CharacterActionManager : MonoBehaviour
         if (!isAwaitingActionConfirmation) return;
         if (!characterManager.CanAffordMana(activeCharacterRunTimeId, action.ManaCost)) return;
 
+        targetSelectionCts?.Cancel();
+
         action.Reset();
         selectedAction = action;
         UpdateActionButtonSelection();
         UpdateActionRangeIndicator();
-        switch (selectedAction.TargetStrategy)
-        {
-            case MouseTargetSelectStrategy mouseStrategy:
-                mouseStrategy.UpdateTargetDisplay(inputManager.CurrentMousePosition);
-                break;
-            case AutoTargetSelectStrategy:
-                selectedAction.TargetStrategy.HideTargetDisplay();
-                if (selectedAction.TryAutoSelectTarget())
-                    CompletePlanning();
-                break;
-        }
+        actionSelectionSource?.TrySetResult();
     }
 
     async UniTask ExecuteSelectedAction()
@@ -159,7 +180,7 @@ public class CharacterActionManager : MonoBehaviour
         if (!characterManager.TrySpendMana(activeCharacterRunTimeId, selectedAction.ManaCost)) return;
 
         await selectedAction.ExecuteAsync();
-        selectedAction.TargetStrategy.HideTargetDisplay();
+        selectedAction.Reset();
         selectedAction = null;
         UpdateActionButtonSelection();
         UpdateActionRangeIndicator();
@@ -168,7 +189,13 @@ public class CharacterActionManager : MonoBehaviour
     }
 
     CharacterAction CreateAction(string actionId, int runTimeId)
-        => new CharacterAction(ActionLibrary.GetAction(actionId), characterManager, mapManager, runTimeId, targetSelectDisplay);
+        => new CharacterAction(
+            ActionLibrary.GetAction(actionId),
+            characterManager,
+            mapManager,
+            inputManager,
+            runTimeId,
+            targetSelectDisplay);
 
     #endregion
 
@@ -204,25 +231,12 @@ public class CharacterActionManager : MonoBehaviour
         characterManager.SetActionRangeIndicator(activeCharacterRunTimeId, 0f, false);
     }
 
-    void HandleMousePositionUpdate(Vector3 mousePosition)
-    {
-        if (selectedAction?.TargetStrategy is not MouseTargetSelectStrategy mouseStrategy) return;
-        mouseStrategy.UpdateTargetDisplay(mousePosition);
-    }
-
-    void HandleMouseClick(Vector3 mousePosition)
-    {
-        if (selectedAction == null) return;
-        if (selectedAction.TargetStrategy is not MouseTargetSelectStrategy) return;
-        if (!selectedAction.TrySelectTarget(mousePosition)) return;
-
-        CompletePlanning();
-    }
-
     void HandleEndTurnButtonPressed()
     {
         isEndTurnRequested = true;
-        CompletePlanning();
+        turnCts?.Cancel();
+        targetSelectionCts?.Cancel();
+        actionSelectionSource?.TrySetResult();
     }
 
     #endregion

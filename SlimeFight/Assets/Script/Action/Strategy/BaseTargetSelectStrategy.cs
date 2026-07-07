@@ -1,19 +1,31 @@
 #nullable enable
-using UnityEngine;
 
 public abstract class BaseTargetSelectStrategy
 {
-    ActionContext context;
-    protected CharacterManager CharacterManager => context.CharacterManager;
-    protected MapManager MapManager => context.MapManager;
-    protected int ActiveCharacterRunTimeId => context.ActiveCharacterRunTimeId;
-    public void Initialize(ActionContext ctx) => context = ctx;
+    protected CharacterManager characterManager = null!;
+    protected MapManager mapManager = null!;
+    protected InputManager inputManager = null!;
+    protected CharacterActionDisplay characterActionDisplay = null!;
+    protected int characterRunTimeId = -1;
 
-    public abstract ActionRangeType RangeType { get; }
-    public abstract float Range { get; }
-    public abstract bool TryGetTarget(out ActionTarget target);
+    protected CharacterManager CharacterManager => characterManager;
+    protected MapManager MapManager => mapManager;
+    protected InputManager InputManager => inputManager;
+    protected int CharacterRunTimeId => characterRunTimeId;
 
-    public virtual void HideTargetDisplay() { }
+    public virtual void Initialize(
+        CharacterManager aCharacterManager,
+        MapManager aMapManager,
+        InputManager aInputManager,
+        int aCharacterRunTimeId,
+        CharacterActionDisplay aCharacterActionDisplay)
+    {
+        characterManager = aCharacterManager;
+        mapManager = aMapManager;
+        inputManager = aInputManager;
+        characterRunTimeId = aCharacterRunTimeId;
+        characterActionDisplay = aCharacterActionDisplay;
+    }
 }
 
 public enum ActionRangeType

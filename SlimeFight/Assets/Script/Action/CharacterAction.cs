@@ -1,69 +1,53 @@
 #nullable enable
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class CharacterAction
 {
     readonly ActionData data;
-    readonly ActionContext context;
+    readonly CharacterManager characterManager;
+    readonly MapManager mapManager;
+    readonly int activeCharacterRunTimeId;
+
+    readonly List<ActionTarget> selectedTargets = new();
 
     public string ActionName => data.Id;
     public int ManaCost => data.ManaCost;
-    public float ActionRange => data.BaseTargetStrategy.Range;
+    public float ActionRange => data.BaseTargetStrategy is MouseTargetSelectStrategy mouseStrategy
+        ? mouseStrategy.Range
+        : 0f;
     public BaseTargetSelectStrategy TargetStrategy => data.BaseTargetStrategy;
-    public bool HasSelectedTarget => hasSelectedTarget;
-    public Vector3 TargetPosition => selectedTarget.Position;
-
-    bool hasSelectedTarget;
-
-    ActionTarget selectedTarget;
+    public bool HasSelectedTarget => selectedTargets.Count > 0;
+    public Vector3 TargetPosition => selectedTargets[0].Position;
 
     public CharacterAction(
         ActionData actionData,
-        CharacterManager characterManager,
-        MapManager mapManager,
-        int activeCharacterRunTimeId,
-        CharacterActionDisplay? targetSelectDisplay = null)
+        CharacterManager aCharacterManager,
+        MapManager aMapManager,
+        InputManager inputManager,
+        int aActiveCharacterRunTimeId,
+        CharacterActionDisplay targetSelectDisplay)
     {
         data = actionData;
-        context = new ActionContext(characterManager, mapManager, activeCharacterRunTimeId);
-        if (data.BaseTargetStrategy is MouseTargetSelectStrategy mouseStrategy && targetSelectDisplay != null)
-            mouseStrategy.Initialize(context, targetSelectDisplay);
-        else
-            data.BaseTargetStrategy.Initialize(context);
+        characterManager = aCharacterManager;
+        mapManager = aMapManager;
+        activeCharacterRunTimeId = aActiveCharacterRunTimeId;
+        data.BaseTargetStrategy.Initialize(
+            aCharacterManager, aMapManager, inputManager, aActiveCharacterRunTimeId, targetSelectDisplay);
     }
 
     public void Reset()
     {
-        hasSelectedTarget = false;
-        selectedTarget = default;
+        selectedTargets.Clear();
     }
 
-    public bool IsValidTargetAt(Vector3 mousePosition)
+    public void SetSelectedTargets(List<ActionTarget> targets)
     {
-        if (data.BaseTargetStrategy is not MouseTargetSelectStrategy mouseStrategy) return false;
-        return mouseStrategy.TryGetTarget(mousePosition, out _);
+        selectedTargets.Clear();
+        selectedTargets.AddRange(targets);
     }
 
-    public bool TrySelectTarget(Vector3 mousePosition)
-    {
-        if (data.BaseTargetStrategy is not MouseTargetSelectStrategy mouseStrategy) return false;
-        if (!mouseStrategy.TryGetTarget(mousePosition, out var target)) return false;
-
-        selectedTarget = target;
-        hasSelectedTarget = true;
-        return true;
-    }
-
-    public bool TryAutoSelectTarget()
-    {
-        if (data.BaseTargetStrategy is not AutoTargetSelectStrategy) return false;
-        if (!data.BaseTargetStrategy.TryGetTarget(out var target)) return false;
-
-        selectedTarget = target;
-        hasSelectedTarget = true;
-        return true;
-    }
-
-    public UniTask ExecuteAsync() => data.Execution.ExecuteAsync(context, selectedTarget);
+    public UniTask ExecuteAsync()
+        => data.Execution.ExecuteAsync(characterManager, mapManager, activeCharacterRunTimeId, selectedTargets[0]);
 }

@@ -3,5 +3,5 @@ using Cysharp.Threading.Tasks;
 
 public interface IActionExecution
 {
-    UniTask ExecuteAsync(ActionContext ctx, ActionTarget target);
+    UniTask ExecuteAsync(CharacterManager characterManager, MapManager mapManager, int activeCharacterRunTimeId, ActionTarget target);
 }

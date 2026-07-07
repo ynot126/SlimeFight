@@ -10,10 +10,10 @@ public class AttackEffect : IActionExecution
         this.damage = damage;
     }
 
-    public async UniTask ExecuteAsync(ActionContext ctx, ActionTarget target)
+    public async UniTask ExecuteAsync(CharacterManager characterManager, MapManager mapManager, int activeCharacterRunTimeId, ActionTarget target)
     {
-        if (target.TargetCharacterRunTimeId == 0) return;
-        ctx.CharacterManager.DealDamage(target.TargetCharacterRunTimeId, damage);
+        if (target.TargetCharacterRunTimeId <= 0) return;
+        characterManager.DealDamage(target.TargetCharacterRunTimeId, damage);
         await UniTask.Yield();
     }
 }

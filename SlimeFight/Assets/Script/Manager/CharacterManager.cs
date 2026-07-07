@@ -123,7 +123,9 @@ public class CharacterManager : MonoBehaviour
 
     void HandleMousePositionUpdate(Vector3 position)
     {
-        var newHovered = TryGetCharacterAtPosition(position, -1, out var character) ? character : null;
+        Character? newHovered = null;
+        if (TryGetCharacterAtPosition(position, -1, out var hoveredRunTimeId) && TryGetCharacter(hoveredRunTimeId, out var character))
+            newHovered = character;
         if (newHovered == hoveredCharacter) return;
 
         CancelHoverDelay();
@@ -218,9 +220,9 @@ public class CharacterManager : MonoBehaviour
 
     #region Targeting & Combat
 
-    public bool TryGetCharacterAtPosition(Vector3 position, int excludeRunTimeId, out Character character)
+    public bool TryGetCharacterAtPosition(Vector3 position, int excludeRunTimeId, out int runTimeId)
     {
-        character = null!;
+        runTimeId = 0;
         var closestDistance = characterSelectionRadius;
         foreach (var candidate in characters.Values)
         {
@@ -228,11 +230,14 @@ public class CharacterManager : MonoBehaviour
             var distance = Vector3.Distance(candidate.Position, position);
             if (distance >= closestDistance) continue;
             closestDistance = distance;
-            character = candidate;
+            runTimeId = candidate.RunTimeId;
         }
 
-        return character != null;
+        return runTimeId != 0;
     }
+
+    public bool TryGetCharacter(int runTimeId, out Character character)
+        => characters.TryGetValue(runTimeId, out character);
 
     public bool IsValidAttackTarget(int attackerRunTimeId, int targetRunTimeId)
     {

@@ -4,6 +4,7 @@ using UnityEngine;
 public class MoveRangeStrategy : MouseTargetSelectStrategy
 {
     readonly ActionRangeType rangeType;
+
     public override ActionRangeType RangeType => rangeType;
     public override float Range => ActionLibrary.GetRange(rangeType);
 
@@ -12,14 +13,16 @@ public class MoveRangeStrategy : MouseTargetSelectStrategy
         this.rangeType = rangeType;
     }
 
-    public override bool TryGetTarget(Vector3 mousePosition, out ActionTarget target)
+    protected override bool IsPositionValid(Vector3 position)
     {
-        target = default;
-        if (!MapManager.IsPositionOnMap(mousePosition)) return false;
-        if (!CharacterManager.IsWithinRange(ActiveCharacterRunTimeId, mousePosition, Range))
-            return false;
+        if (!mapManager.IsPositionOnMap(position)) return false;
+        return characterManager.IsWithinRange(characterRunTimeId, position, Range);
+    }
 
-        target = new ActionTarget(mousePosition);
-        return true;
+    protected override void UpdateTargetDisplay(Vector3 mousePosition)
+    {
+        characterActionDisplay.SetPosition(mousePosition);
+        characterActionDisplay.SetValidTargetVisual(IsPositionValid(mousePosition));
+        characterActionDisplay.SetVisible(true);
     }
 }

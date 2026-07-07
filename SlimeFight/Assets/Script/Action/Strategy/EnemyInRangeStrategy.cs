@@ -4,6 +4,7 @@ using UnityEngine;
 public class EnemyInRangeStrategy : MouseTargetSelectStrategy
 {
     readonly ActionRangeType rangeType;
+
     public override ActionRangeType RangeType => rangeType;
     public override float Range => ActionLibrary.GetRange(rangeType);
 
@@ -12,17 +13,19 @@ public class EnemyInRangeStrategy : MouseTargetSelectStrategy
         this.rangeType = rangeType;
     }
 
-    public override bool TryGetTarget(Vector3 mousePosition, out ActionTarget target)
+    protected override bool IsPositionValid(Vector3 position)
     {
-        target = default;
-        if (!CharacterManager.TryGetCharacterAtPosition(mousePosition, ActiveCharacterRunTimeId, out var character))
+        if (!characterManager.TryGetCharacterAtPosition(position, characterRunTimeId, out var targetRunTimeId))
             return false;
-        if (!CharacterManager.IsValidAttackTarget(ActiveCharacterRunTimeId, character.RunTimeId))
+        if (!characterManager.IsValidAttackTarget(characterRunTimeId, targetRunTimeId))
             return false;
-        if (!CharacterManager.IsWithinRange(ActiveCharacterRunTimeId, character.RunTimeId, Range))
-            return false;
+        return characterManager.IsWithinRange(characterRunTimeId, targetRunTimeId, Range);
+    }
 
-        target = new ActionTarget(character.Position, character.RunTimeId);
-        return true;
+    protected override void UpdateTargetDisplay(Vector3 mousePosition)
+    {
+        characterActionDisplay.SetPosition(mousePosition);
+        characterActionDisplay.SetValidTargetVisual(IsPositionValid(mousePosition));
+        characterActionDisplay.SetVisible(true);
     }
 }
