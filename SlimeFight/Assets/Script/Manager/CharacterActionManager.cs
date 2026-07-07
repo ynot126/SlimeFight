@@ -249,15 +249,24 @@ public class CharacterActionManager : MonoBehaviour
 
     void UpdateActionRangeIndicator()
     {
-        if (selectedAction != null)
-            characterManager.SetActionRangeIndicator(activeCharacterRunTimeId, selectedAction.ActionRange, true);
-        else
+        if (selectedAction == null)
+        {
             HideActionRangeIndicator();
+            return;
+        }
+
+        if (!characterManager.TryGetCharacter(activeCharacterRunTimeId, out var character))
+        {
+            HideActionRangeIndicator();
+            return;
+        }
+
+        targetSelectDisplay.SetActionRangeIndicator(character.Position, selectedAction.TargetStrategy);
     }
 
     void HideActionRangeIndicator()
     {
-        characterManager.SetActionRangeIndicator(activeCharacterRunTimeId, 0f, false);
+        targetSelectDisplay.SetActionRangeIndicatorVisible(false);
     }
 
     void HandleEndTurnButtonPressed()

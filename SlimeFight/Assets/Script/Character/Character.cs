@@ -6,7 +6,7 @@ public class Character : MonoBehaviour
 {
     [SerializeField] SpriteRenderer spriteRenderer = null!;
     [SerializeField] SpriteRenderer selectedSpriteRenderer = null!;
-    [SerializeField] CharacterActionRangeIndicator actionRangeIndicator = null!;
+    
     // character data
     CharacterType type;
     int runTimeId;
@@ -40,7 +40,6 @@ public class Character : MonoBehaviour
         type = aType;
 
         SetCharacterReadyAction(false);
-        actionRangeIndicator.SetVisible(false);
     }
 
     public void RefillMana() => currentMana = maxMana;
@@ -70,19 +69,6 @@ public class Character : MonoBehaviour
     {
         selectedSpriteRenderer.gameObject.SetActive(val);
     }
-
-    public void SetActionRangeIndicator(float range, bool visible)
-    {
-        if (!visible)
-        {
-            actionRangeIndicator.SetVisible(false);
-            return;
-        }
-
-        actionRangeIndicator.SetRange(range);
-        actionRangeIndicator.SetVisible(true);
-    }
-
 }
 
 public enum CharacterType

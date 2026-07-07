@@ -180,9 +180,6 @@ public class CharacterManager : MonoBehaviour
     public void SetCharacterReadyAction(bool val, int runTimeId)
         => characters[runTimeId].SetCharacterReadyAction(val);
 
-    public void SetActionRangeIndicator(int runTimeId, float range, bool visible)
-        => characters[runTimeId].SetActionRangeIndicator(range, visible);
-
     public IReadOnlyList<string> GetCharacterActions(int runTimeId)
         => characterActions[runTimeId];
 

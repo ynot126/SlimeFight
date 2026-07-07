@@ -14,9 +14,6 @@ public class CharacterAction
 
     public string ActionName => data.Id;
     public int ManaCost => data.ManaCost;
-    public float ActionRange => data.BaseTargetStrategy is MouseTargetSelectStrategy mouseStrategy
-        ? mouseStrategy.Range
-        : 0f;
     public BaseTargetSelectStrategy TargetStrategy => data.BaseTargetStrategy;
     public bool HasSelectedTarget => selectedTargets.Count > 0;
     public Vector3 TargetPosition => selectedTargets[0].Position;
