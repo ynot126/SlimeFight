@@ -47,7 +47,7 @@ public class GameView : BaseView
         spawnedActionButtons.Clear();
     }
 
-    public void UpdateActionButtonSelection(CharacterAction selectedAction)
+    public void UpdateActionButtonSelection(CharacterAction? selectedAction)
     {
         foreach (var (button, action) in spawnedActionButtons)
             button.SetButtonSelectState(action == selectedAction);

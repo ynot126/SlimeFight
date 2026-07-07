@@ -24,9 +24,9 @@ public class CharacterActionManager : MonoBehaviour
     readonly List<CharacterAction> availableActions = new();
     CharacterAction? selectedAction;
 
-    CancellationTokenSource? turnCts;
-    CancellationTokenSource? targetSelectionCts;
+    CancellationTokenSource? actionConfirmationCts;
     UniTaskCompletionSource? actionSelectionSource;
+    System.Action? cancelCurrentTargetSelection;
 
     public void Initialize(CharacterManager aCharacterManager, MapManager aMapManager, InputManager aInputManager)
     {
@@ -76,11 +76,12 @@ public class CharacterActionManager : MonoBehaviour
 
         activeGameView.SpawnActionButtons(availableActions);
         activeGameView.SetShowCharacterActionOption(true);
-        UpdateActionButtonSelection();
-        UpdateActionButtonAffordability();
-        characterManager.SetCharacterReadyAction(true, runTimeId);
         activeGameView.OnActionSelected += SelectAction;
         activeGameView.OnEndTurnButtonPressed += HandleEndTurnButtonPressed;
+        
+        characterManager.SetCharacterReadyAction(true, runTimeId);
+        UpdateActionButtonSelection();
+        UpdateActionButtonAffordability();
     }
 
     void EndTurn()
@@ -106,39 +107,17 @@ public class CharacterActionManager : MonoBehaviour
     async UniTask WaitForActionConfirmation()
     {
         isAwaitingActionConfirmation = true;
-        turnCts = new CancellationTokenSource();
+        actionConfirmationCts = new CancellationTokenSource();
 
         try
         {
             while (!isEndTurnRequested)
             {
-                if (selectedAction == null)
-                {
-                    actionSelectionSource = new UniTaskCompletionSource();
-                    await actionSelectionSource.Task;
-                    actionSelectionSource = null;
-                    if (isEndTurnRequested) return;
-                }
-
-                if (selectedAction!.TargetStrategy is AutoTargetSelectStrategy)
-                    throw new NotImplementedException("AutoTargetSelectStrategy is not implemented yet.");
-
-                if (selectedAction.TargetStrategy is not MouseTargetSelectStrategy mouseStrategy)
-                    return;
-
-                targetSelectionCts?.Cancel();
-                targetSelectionCts?.Dispose();
-                targetSelectionCts = CancellationTokenSource.CreateLinkedTokenSource(turnCts.Token);
-
-                var result = await mouseStrategy.GetTarget(targetSelectionCts.Token);
-
+                await WaitUntilActionSelected();
                 if (isEndTurnRequested) return;
 
-                if (result != null)
-                {
-                    selectedAction.SetSelectedTargets(result);
+                if (await TrySelectTargetsForSelectedAction(actionConfirmationCts.Token))
                     return;
-                }
             }
         }
         finally
@@ -146,13 +125,61 @@ public class CharacterActionManager : MonoBehaviour
             isAwaitingActionConfirmation = false;
             actionSelectionSource?.TrySetCanceled();
             actionSelectionSource = null;
-            targetSelectionCts?.Cancel();
-            targetSelectionCts?.Dispose();
-            targetSelectionCts = null;
-            turnCts?.Cancel();
-            turnCts?.Dispose();
-            turnCts = null;
+            cancelCurrentTargetSelection?.Invoke();
+            cancelCurrentTargetSelection = null;
+            actionConfirmationCts?.Cancel();
+            actionConfirmationCts?.Dispose();
+            actionConfirmationCts = null;
             HideActionRangeIndicator();
+        }
+    }
+
+    async UniTask WaitUntilActionSelected()
+    {
+        while (selectedAction == null && !isEndTurnRequested)
+        {
+            actionSelectionSource = new UniTaskCompletionSource();
+            await actionSelectionSource.Task;
+            actionSelectionSource = null;
+        }
+    }
+
+    async UniTask<bool> TrySelectTargetsForSelectedAction(CancellationToken confirmationToken)
+    {
+        var action = selectedAction;
+        if (action == null) return false;
+
+        if (action.TargetStrategy is AutoTargetSelectStrategy)
+            throw new System.NotImplementedException("AutoTargetSelectStrategy is not implemented yet.");
+
+        if (action.TargetStrategy is not MouseTargetSelectStrategy mouseStrategy)
+            return true;
+
+        var result = await WaitForMouseTargets(mouseStrategy, confirmationToken);
+
+        if (isEndTurnRequested || selectedAction != action || result == null) return false;
+
+        action.SetSelectedTargets(result);
+        return true;
+    }
+
+    async UniTask<List<ActionTarget>?> WaitForMouseTargets(
+        MouseTargetSelectStrategy mouseStrategy,
+        CancellationToken confirmationToken)
+    {
+        using var targetSelectionCts = CancellationTokenSource.CreateLinkedTokenSource(confirmationToken);
+        System.Action cancelTargetSelection = targetSelectionCts.Cancel;
+
+        cancelCurrentTargetSelection = cancelTargetSelection;
+
+        try
+        {
+            return await mouseStrategy.GetTarget(targetSelectionCts.Token);
+        }
+        finally
+        {
+            if (cancelCurrentTargetSelection == cancelTargetSelection)
+                cancelCurrentTargetSelection = null;
         }
     }
 
@@ -165,7 +192,9 @@ public class CharacterActionManager : MonoBehaviour
         if (!isAwaitingActionConfirmation) return;
         if (!characterManager.CanAffordMana(activeCharacterRunTimeId, action.ManaCost)) return;
 
-        targetSelectionCts?.Cancel();
+        var previousTargetSelection = cancelCurrentTargetSelection;
+        selectedAction = null;
+        previousTargetSelection?.Invoke();
 
         action.Reset();
         selectedAction = action;
@@ -234,8 +263,8 @@ public class CharacterActionManager : MonoBehaviour
     void HandleEndTurnButtonPressed()
     {
         isEndTurnRequested = true;
-        turnCts?.Cancel();
-        targetSelectionCts?.Cancel();
+        actionConfirmationCts?.Cancel();
+        cancelCurrentTargetSelection?.Invoke();
         actionSelectionSource?.TrySetResult();
     }
 
