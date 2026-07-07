@@ -34,6 +34,7 @@ public class CharacterManager : MonoBehaviour
     readonly Dictionary<int, Character> characters = new();
     readonly Dictionary<int, CharacterStatusCanvas> statusCanvases = new();
     readonly Dictionary<int, List<string>> characterActions = new();
+    readonly Dictionary<int, EnemyData> enemyDataByRunTimeId = new();
     int currentIdCounter = 1;
     Character? hoveredCharacter;
     CharacterStatusCanvas? hoveredStatusCanvas;
@@ -80,7 +81,10 @@ public class CharacterManager : MonoBehaviour
         => SpawnEntity(data.stat, CharacterType.Player, runTimeId, data.actionIds);
 
     void SpawnEnemy(EnemyData data, int runTimeId)
-        => SpawnEntity(data.stat, CharacterType.Enemy, runTimeId, new List<string>());
+    {
+        SpawnEntity(data.stat, CharacterType.Enemy, runTimeId, data.actionIds);
+        enemyDataByRunTimeId[runTimeId] = data;
+    }
 
     void SpawnEntity(EntityStat stat, CharacterType type, int runTimeId, IReadOnlyList<string> actionIds)
     {
@@ -115,6 +119,7 @@ public class CharacterManager : MonoBehaviour
         statusCanvases.Remove(runTimeId);
         characters.Remove(runTimeId);
         characterActions.Remove(runTimeId);
+        enemyDataByRunTimeId.Remove(runTimeId);
     }
 
     #endregion
@@ -171,7 +176,6 @@ public class CharacterManager : MonoBehaviour
     public List<int> GetMovementOrder()
     {
         return characters.Values
-            .Where(c => c.Type == CharacterType.Player)
             .OrderByDescending(c => c.Speed)
             .Select(c => c.RunTimeId)
             .ToList();
@@ -182,6 +186,12 @@ public class CharacterManager : MonoBehaviour
 
     public IReadOnlyList<string> GetCharacterActions(int runTimeId)
         => characterActions[runTimeId];
+
+    public CharacterType GetCharacterType(int runTimeId)
+        => characters[runTimeId].Type;
+
+    public bool TryGetEnemyData(int runTimeId, out EnemyData enemyData)
+        => enemyDataByRunTimeId.TryGetValue(runTimeId, out enemyData);
 
     #endregion
 
@@ -260,6 +270,46 @@ public class CharacterManager : MonoBehaviour
     {
         if (!characters.TryGetValue(sourceRunTimeId, out var source)) return false;
         return Vector3.Distance(source.Position, position) <= range;
+    }
+
+    public bool TryGetClosestValidAttackTarget(int attackerRunTimeId, float range, out Character target)
+    {
+        target = null!;
+        if (!characters.TryGetValue(attackerRunTimeId, out var attacker)) return false;
+
+        var closestDistance = float.MaxValue;
+        foreach (var candidate in characters.Values)
+        {
+            if (!IsValidAttackTarget(attackerRunTimeId, candidate.RunTimeId)) continue;
+
+            var distance = Vector3.Distance(attacker.Position, candidate.Position);
+            if (distance > range || distance >= closestDistance) continue;
+
+            closestDistance = distance;
+            target = candidate;
+        }
+
+        return target != null;
+    }
+
+    public bool TryGetClosestOpponent(int runTimeId, out Character target)
+    {
+        target = null!;
+        if (!characters.TryGetValue(runTimeId, out var character)) return false;
+
+        var closestDistance = float.MaxValue;
+        foreach (var candidate in characters.Values)
+        {
+            if (!IsValidAttackTarget(runTimeId, candidate.RunTimeId)) continue;
+
+            var distance = Vector3.Distance(character.Position, candidate.Position);
+            if (distance >= closestDistance) continue;
+
+            closestDistance = distance;
+            target = candidate;
+        }
+
+        return target != null;
     }
 
     #endregion

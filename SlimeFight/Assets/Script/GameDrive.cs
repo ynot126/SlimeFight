@@ -10,6 +10,7 @@ public class GameDrive : MonoBehaviour
     [SerializeField] MapManager mapManagerPrefab = null!;
     [SerializeField] CharacterManager characterManagerPrefab = null!;
     [SerializeField] CharacterActionManager characterActionManagerPrefab = null!;
+    [SerializeField] BotActionManager botActionManagerPrefab = null!;
 
     [Header("Camera")]
     [SerializeField] GameCameraController gameCameraController = null!;
@@ -23,6 +24,7 @@ public class GameDrive : MonoBehaviour
     MapManager mapManager = null!;
     CharacterManager characterManager = null!;
     CharacterActionManager characterActionManager = null!;
+    BotActionManager botActionManager = null!;
 
     // data
     GameData gameData = null!;
@@ -55,6 +57,11 @@ public class GameDrive : MonoBehaviour
         
         characterActionManager = Instantiate(characterActionManagerPrefab);
         characterActionManager.Initialize(characterManager, mapManager, inputManager);
+
+        botActionManager = botActionManagerPrefab != null
+            ? Instantiate(botActionManagerPrefab)
+            : new GameObject(nameof(BotActionManager)).AddComponent<BotActionManager>();
+        botActionManager.Initialize(characterManager, mapManager, inputManager);
     }
 
 
@@ -88,7 +95,10 @@ public class GameDrive : MonoBehaviour
         var orderList = characterManager.GetMovementOrder();
         foreach (var id in orderList)
         {
-            await characterActionManager.RunCharacterTurn(id, gameView);
+            if (characterManager.GetCharacterType(id) == CharacterType.Player)
+                await characterActionManager.RunCharacterTurn(id, gameView);
+            else
+                await botActionManager.RunCharacterTurn(id, gameView);
         }
     }
 

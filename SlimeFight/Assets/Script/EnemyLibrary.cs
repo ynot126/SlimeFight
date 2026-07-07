@@ -10,7 +10,9 @@ public static class EnemyLibrary
     static EnemyLibrary()
     {
         enemyFactory["Testing"] = () => new EnemyData("Testing")
-            .SetStat(new EntityStat(5, 2, 1, 2, 0, 2));
+            .SetStat(new EntityStat(5, 2, 1, 2, 0, 2))
+            .SetActionIds("strike", "move")
+            .SetBotPlannerData(new BotPlannerData(2));
     }
     public static EnemyData GetEnemy(string actionId)
     {
