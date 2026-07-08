@@ -22,6 +22,8 @@ public class GameView : BaseView
 
     public event Action? OnEndTurnButtonPressed;
     public event Action<CharacterAction>? OnActionSelected;
+    public event Action? OnActionHover;
+    public event Action? OnActionHoverExit;
 
     public void Initialize()
     {
@@ -36,6 +38,16 @@ public class GameView : BaseView
             var actionButton = Instantiate(actionButtonPrefab, actionButtonContainer);
             actionButton.Initialize(action);
             actionButton.OnPointerClick += () => OnActionSelected?.Invoke(action);
+            actionButton.OnPointerEnter += () =>
+            {
+                actionButton.SetHoverState(true);
+                OnActionHover?.Invoke();
+            };
+            actionButton.OnPointerExit += () =>
+            {
+                actionButton.SetHoverState(false);
+                OnActionHoverExit?.Invoke();
+            };
             spawnedActionButtons.Add((actionButton, action));
         }
     }

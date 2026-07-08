@@ -15,11 +15,16 @@ public class ActionButton : CustomButton
     
     public void SetButtonSelectState(bool val)
     {
-        transform.DOScale(val?1.2f:1f, 0.2f);
+        actionName.color = val ? Color.red : Color.black;
     }
 
     public void SetButtonSelectable(bool val)
     {
         buttonImage.color = val? Color.white: Color.gray;
+    }
+
+    public void SetHoverState(bool val)
+    {
+        transform.DOScale(val?1.2f:1f, 0.2f);
     }
 }
