@@ -65,6 +65,6 @@ public abstract class MouseTargetSelectStrategy : BaseTargetSelectStrategy
 
     protected virtual void ClearTargetDisplay()
     {
-        characterActionDisplay.SetVisible(false);
+        characterActionDisplay.Cleanup();
     }
 }

@@ -26,7 +26,9 @@ public class CharacterActionManager : BaseCharacterActionManager
         ActiveGameView.SetShowCharacterActionOption(true);
         ActiveGameView.OnActionSelected += SelectAction;
         ActiveGameView.OnEndTurnButtonPressed += HandleEndTurnButtonPressed;
-        
+        ActiveGameView.OnActionHover += HandleActionHover;
+        ActiveGameView.OnActionHoverExit += HandleActionHoverExit;
+
         UpdateActionButtonSelection();
         UpdateActionButtonAffordability();
     }
@@ -35,6 +37,8 @@ public class CharacterActionManager : BaseCharacterActionManager
     {
         ActiveGameView.OnActionSelected -= SelectAction;
         ActiveGameView.OnEndTurnButtonPressed -= HandleEndTurnButtonPressed;
+        ActiveGameView.OnActionHover -= HandleActionHover;
+        ActiveGameView.OnActionHoverExit -= HandleActionHoverExit;
         ActiveGameView.ClearActionButtons();
         ActiveGameView.ClearManaText();
         ActiveGameView.SetShowCharacterActionOption(false);
@@ -180,6 +184,24 @@ public class CharacterActionManager : BaseCharacterActionManager
     void UpdateActionButtonAffordability()
     {
         ActiveGameView.UpdateActionButtonAffordability(CharacterManager.GetCurrentMana(ActiveCharacterRunTimeId));
+    }
+
+    void HandleActionHover(CharacterAction action)
+    {
+        if (!CharacterManager.CanAffordMana(ActiveCharacterRunTimeId, action.ManaCost)) return;
+
+        action.TargetStrategy.ShowTargetPreview();
+    }
+
+    void HandleActionHoverExit()
+    {
+        if (selectedAction != null)
+        {
+            UpdateActionRangeIndicator();
+            return;
+        }
+
+        HideActionRangeIndicator();
     }
 
     void UpdateActionRangeIndicator()

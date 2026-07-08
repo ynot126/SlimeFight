@@ -6,10 +6,15 @@ public class CharacterActionDisplay : MonoBehaviour
     [SerializeField] SpriteRenderer spriteRenderer = null!;
     [SerializeField] SpriteRenderer rangeSpriteRenderer = null!;
 
-    void Awake()
+    public void Initialize()
     {
-        rangeSpriteRenderer.gameObject.SetActive(false);
-        spriteRenderer.gameObject.SetActive(false);
+        Cleanup();
+    }
+
+    public void Cleanup()
+    {
+        SetVisible(false);
+        SetActionRangeIndicatorVisible(false);
     }
 
     public void SetPosition(Vector3 position)

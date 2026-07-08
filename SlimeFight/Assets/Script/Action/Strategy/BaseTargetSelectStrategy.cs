@@ -26,6 +26,17 @@ public abstract class BaseTargetSelectStrategy
         characterRunTimeId = aCharacterRunTimeId;
         characterActionDisplay = aCharacterActionDisplay;
     }
+
+    public virtual void ShowTargetPreview()
+    {
+        if (!characterManager.TryGetCharacter(characterRunTimeId, out var character))
+        {
+            characterActionDisplay.SetActionRangeIndicatorVisible(false);
+            return;
+        }
+
+        characterActionDisplay.SetActionRangeIndicator(character.Position, this);
+    }
 }
 
 public enum ActionRangeType

@@ -27,7 +27,7 @@ public abstract class BaseCharacterActionManager : MonoBehaviour
         if (characterActionDisplayPrefab == null) return;
 
         TargetSelectDisplay = Instantiate(characterActionDisplayPrefab);
-        TargetSelectDisplay.SetVisible(false);
+        TargetSelectDisplay.Initialize();
     }
 
     protected virtual void OnDestroy()

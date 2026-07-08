@@ -22,7 +22,7 @@ public class GameView : BaseView
 
     public event Action? OnEndTurnButtonPressed;
     public event Action<CharacterAction>? OnActionSelected;
-    public event Action? OnActionHover;
+    public event Action<CharacterAction>? OnActionHover;
     public event Action? OnActionHoverExit;
 
     public void Initialize()
@@ -41,7 +41,7 @@ public class GameView : BaseView
             actionButton.OnPointerEnter += () =>
             {
                 actionButton.SetHoverState(true);
-                OnActionHover?.Invoke();
+                OnActionHover?.Invoke(action);
             };
             actionButton.OnPointerExit += () =>
             {
