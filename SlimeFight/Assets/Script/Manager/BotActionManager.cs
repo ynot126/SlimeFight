@@ -10,14 +10,14 @@ public class BotActionManager : BaseCharacterActionManager
     {
         base.BeginTurn(runTimeId, gameView);
 
-        if (!CharacterManager.TryGetEnemyData(runTimeId, out var enemyData))
+        if (!CharacterManager.TryGetBotData(runTimeId, out var botData))
         {
             RequestEndTurn();
             return;
         }
 
         botActionPlanner.Initialize(
-            enemyData,
+            botData,
             CharacterManager,
             MapManager,
             runTimeId,

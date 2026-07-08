@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class BotActionPlanner
 {
-    EnemyData enemyData = null!;
+    BotData botData = null!;
     CharacterManager characterManager = null!;
     MapManager mapManager = null!;
     int activeCharacterRunTimeId;
@@ -14,13 +14,13 @@ public class BotActionPlanner
     int plannedActionCount;
 
     public void Initialize(
-        EnemyData aEnemyData,
+        BotData aBotData,
         CharacterManager aCharacterManager,
         MapManager aMapManager,
         int aActiveCharacterRunTimeId,
         IReadOnlyList<CharacterAction> aAvailableActions)
     {
-        enemyData = aEnemyData;
+        botData = aBotData;
         characterManager = aCharacterManager;
         mapManager = aMapManager;
         activeCharacterRunTimeId = aActiveCharacterRunTimeId;
@@ -32,7 +32,7 @@ public class BotActionPlanner
     {
         await UniTask.Yield();
 
-        if (plannedActionCount >= enemyData.BotPlannerData.MaxActionsPerTurn)
+        if (plannedActionCount >= botData.BotPlannerData.MaxActionsPerTurn)
             return null;
 
         foreach (var action in availableActions)

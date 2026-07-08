@@ -34,7 +34,7 @@ public class CharacterManager : MonoBehaviour
     readonly Dictionary<int, Character> characters = new();
     readonly Dictionary<int, CharacterStatusCanvas> statusCanvases = new();
     readonly Dictionary<int, List<string>> characterActions = new();
-    readonly Dictionary<int, EnemyData> enemyDataByRunTimeId = new();
+    readonly Dictionary<int, BotData> botDataByRunTimeId = new();
     int currentIdCounter = 1;
     Character? hoveredCharacter;
     CharacterStatusCanvas? hoveredStatusCanvas;
@@ -73,17 +73,17 @@ public class CharacterManager : MonoBehaviour
     public async UniTask SpawnEnemy()
     {
         await UniTask.Yield();
-        var enemyData = EnemyLibrary.GetEnemy("Testing");
-        SpawnEnemy(enemyData, currentIdCounter++);
+        var botData = BotLibrary.GetBot("Testing");
+        SpawnEnemy(botData, currentIdCounter++);
     }
 
     void SpawnCharacter(CharacterData data, int runTimeId)
         => SpawnEntity(data.stat, CharacterType.Player, runTimeId, data.actionIds);
 
-    void SpawnEnemy(EnemyData data, int runTimeId)
+    void SpawnEnemy(BotData data, int runTimeId)
     {
         SpawnEntity(data.stat, CharacterType.Enemy, runTimeId, data.actionIds);
-        enemyDataByRunTimeId[runTimeId] = data;
+        botDataByRunTimeId[runTimeId] = data;
     }
 
     void SpawnEntity(EntityStat stat, CharacterType type, int runTimeId, IReadOnlyList<string> actionIds)
@@ -119,7 +119,7 @@ public class CharacterManager : MonoBehaviour
         statusCanvases.Remove(runTimeId);
         characters.Remove(runTimeId);
         characterActions.Remove(runTimeId);
-        enemyDataByRunTimeId.Remove(runTimeId);
+        botDataByRunTimeId.Remove(runTimeId);
     }
 
     #endregion
@@ -190,8 +190,8 @@ public class CharacterManager : MonoBehaviour
     public CharacterType GetCharacterType(int runTimeId)
         => characters[runTimeId].Type;
 
-    public bool TryGetEnemyData(int runTimeId, out EnemyData enemyData)
-        => enemyDataByRunTimeId.TryGetValue(runTimeId, out enemyData);
+    public bool TryGetBotData(int runTimeId, out BotData botData)
+        => botDataByRunTimeId.TryGetValue(runTimeId, out botData);
 
     #endregion
 
