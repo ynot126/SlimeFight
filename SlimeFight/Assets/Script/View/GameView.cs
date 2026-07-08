@@ -35,7 +35,7 @@ public class GameView : BaseView
         {
             var actionButton = Instantiate(actionButtonPrefab, actionButtonContainer);
             actionButton.Initialize(action);
-            actionButton.OnActionButtonPressed += () => OnActionSelected?.Invoke(action);
+            actionButton.OnPointerClick += () => OnActionSelected?.Invoke(action);
             spawnedActionButtons.Add((actionButton, action));
         }
     }
@@ -73,6 +73,6 @@ public class GameView : BaseView
     public void UpdateActionButtonAffordability(int currentMana)
     {
         foreach (var (button, action) in spawnedActionButtons)
-            button.SetInteractable(currentMana >= action.ManaCost);
+            button.SetButtonSelectable(currentMana >= action.ManaCost);
     }
 }
