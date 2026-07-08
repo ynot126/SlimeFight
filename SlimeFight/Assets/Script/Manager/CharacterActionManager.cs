@@ -212,13 +212,7 @@ public class CharacterActionManager : BaseCharacterActionManager
             return;
         }
 
-        if (!CharacterManager.TryGetCharacter(ActiveCharacterRunTimeId, out var character))
-        {
-            HideActionRangeIndicator();
-            return;
-        }
-
-        TargetSelectDisplay.SetActionRangeIndicator(character.Position, selectedAction.TargetStrategy);
+        selectedAction.TargetStrategy.ShowTargetPreview();
     }
 
     protected override void HideActionRangeIndicator()

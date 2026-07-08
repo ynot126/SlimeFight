@@ -32,23 +32,12 @@ public class CharacterActionDisplay : MonoBehaviour
         spriteRenderer.color = val ? Color.blue : Color.green;
     }
 
-    public void SetActionRangeIndicator(Vector3 centerPosition, BaseTargetSelectStrategy targetStrategy)
-    {
-        if (targetStrategy is not MouseTargetSelectStrategy mouseStrategy)
-        {
-            SetActionRangeIndicatorVisible(false);
-            return;
-        }
-
-        SetActionRangeIndicator(centerPosition, mouseStrategy.Range, true);
-    }
-
     public void SetActionRangeIndicatorVisible(bool visible)
     {
         rangeSpriteRenderer.gameObject.SetActive(visible);
     }
 
-    void SetActionRangeIndicator(Vector3 centerPosition, float range, bool visible)
+    public void SetActionRangeIndicator(Vector3 centerPosition, float range, bool visible)
     {
         SetActionRangeIndicatorVisible(visible);
         if (!visible) return;

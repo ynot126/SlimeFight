@@ -29,13 +29,7 @@ public abstract class BaseTargetSelectStrategy
 
     public virtual void ShowTargetPreview()
     {
-        if (!characterManager.TryGetCharacter(characterRunTimeId, out var character))
-        {
-            characterActionDisplay.SetActionRangeIndicatorVisible(false);
-            return;
-        }
-
-        characterActionDisplay.SetActionRangeIndicator(character.Position, this);
+        characterActionDisplay.SetActionRangeIndicatorVisible(false);
     }
 }
 

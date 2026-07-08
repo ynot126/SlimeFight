@@ -63,6 +63,17 @@ public abstract class MouseTargetSelectStrategy : BaseTargetSelectStrategy
     protected abstract void UpdateTargetDisplay(Vector3 mousePosition);
     protected abstract bool IsPositionValid(Vector3 position);
 
+    public override void ShowTargetPreview()
+    {
+        if (!characterManager.TryGetCharacter(characterRunTimeId, out var character))
+        {
+            characterActionDisplay.SetActionRangeIndicatorVisible(false);
+            return;
+        }
+
+        characterActionDisplay.SetActionRangeIndicator(character.Position, Range, true);
+    }
+
     protected virtual void ClearTargetDisplay()
     {
         characterActionDisplay.Cleanup();
