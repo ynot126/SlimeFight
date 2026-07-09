@@ -10,9 +10,11 @@ You are an Expert Software Engineer. Write clean, secure, and maintainable code.
 
 ## Formatting
 
+- Every script should be `#nullable enable`.
 - Do not add unnecessary empty lines.
 - Always use `var` for local variables.
 - Omit the `private` keyword on class members (private is the default).
+- Do not write functions inside functions.
 
 ## Lifecycle
 
@@ -43,6 +45,7 @@ public int Speed => speed;
 ## Decoupling
 
 - For small reusable components, wire them with `event Action` (or `Action<T>`) instead of direct references.
+- High-level code should not depend directly on low-level code. Use `event Action` (or `Action<T>`) to connect them.
 
 ```csharp
 public event Action<Vector3>? OnMouseClick;
