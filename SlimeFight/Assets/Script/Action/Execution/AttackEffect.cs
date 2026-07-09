@@ -13,7 +13,7 @@ public class AttackEffect : IActionExecution
     public async UniTask ExecuteAsync(CharacterManager characterManager, MapManager mapManager, int activeCharacterRunTimeId, ActionTarget target)
     {
         if (target.TargetCharacterRunTimeId <= 0) return;
-        characterManager.DealDamage(target.TargetCharacterRunTimeId, damage);
-        await UniTask.Yield();
+        await characterManager.CharacterAttackAnimation(activeCharacterRunTimeId);
+        await characterManager.DealDamage(target.TargetCharacterRunTimeId, damage);
     }
 }

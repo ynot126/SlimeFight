@@ -84,6 +84,7 @@ public class BotActionPlanner
         var moveDistance = Mathf.Min(moveRangeStrategy.Range, distance);
         var movePosition = activeCharacter.Position + direction.normalized * moveDistance;
         if (!mapManager.IsPositionOnMap(movePosition)) return false;
+        if (characterManager.IsMovementPathBlocked(activeCharacterRunTimeId, movePosition)) return false;
 
         action.Reset();
         action.SetSelectedTargets(new List<ActionTarget>

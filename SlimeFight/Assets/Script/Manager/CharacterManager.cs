@@ -227,6 +227,12 @@ public class CharacterManager : MonoBehaviour
 
     #region Targeting & Combat
 
+    public async UniTask CharacterAttackAnimation(int runTimeId)
+    {
+        if (!characters.TryGetValue(runTimeId, out var character)) return;
+        await character.AttackAnimation();
+    }
+
     public bool TryGetCharacterAtPosition(Vector3 position, int excludeRunTimeId, out int runTimeId)
     {
         runTimeId = 0;
@@ -253,9 +259,10 @@ public class CharacterManager : MonoBehaviour
         return attacker.Type != target.Type;
     }
 
-    public void DealDamage(int targetRunTimeId, int damage)
+    public async UniTask DealDamage(int targetRunTimeId, int damage)
     {
         if (!characters.TryGetValue(targetRunTimeId, out var target)) return;
+        await target.DamageAnimation();
         target.TakeDamage(damage);
     }
 

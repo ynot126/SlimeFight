@@ -1,9 +1,15 @@
 #nullable enable
 using System;
+using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using UnityEngine;
 
 public class Character : MonoBehaviour
 {
+    const float attackAnimationScale = 1.2f;
+    const float attackAnimationDuration = 0.3f;
+    const float damageAnimationDuration = 0.3f;
+
     [SerializeField] SpriteRenderer spriteRenderer = null!;
     [SerializeField] SpriteRenderer selectedSpriteRenderer = null!;
     
@@ -51,6 +57,22 @@ public class Character : MonoBehaviour
         if (!CanAffordMana(cost)) return false;
         currentMana -= cost;
         return true;
+    }
+
+    public async UniTask AttackAnimation()
+    {
+        var spriteTransform = spriteRenderer.transform;
+        var originalScale = spriteTransform.localScale;
+        var targetScale = originalScale * attackAnimationScale;
+        await spriteTransform.DOScale(targetScale, attackAnimationDuration * 0.5f).SetLoops(2, LoopType.Yoyo).ToUniTask();
+        spriteTransform.localScale = originalScale;
+    }
+
+    public async UniTask DamageAnimation()
+    {
+        var originalColor = spriteRenderer.color;
+        await spriteRenderer.DOColor(Color.red, damageAnimationDuration * 0.5f).SetLoops(2, LoopType.Yoyo).ToUniTask();
+        spriteRenderer.color = originalColor;
     }
 
     public void TakeDamage(int damage)
