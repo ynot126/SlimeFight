@@ -5,6 +5,7 @@ public class CharacterActionDisplay : MonoBehaviour
 {
     [SerializeField] SpriteRenderer spriteRenderer = null!;
     [SerializeField] SpriteRenderer rangeSpriteRenderer = null!;
+    [SerializeField] LineRenderer movePathLineRenderer = null!;
 
     public void Initialize()
     {
@@ -15,6 +16,7 @@ public class CharacterActionDisplay : MonoBehaviour
     {
         SetVisible(false);
         SetActionRangeIndicatorVisible(false);
+        SetMovePathIndicatorVisible(false);
     }
 
     public void SetPosition(Vector3 position)
@@ -30,6 +32,24 @@ public class CharacterActionDisplay : MonoBehaviour
     public void SetValidTargetVisual(bool val)
     {
         spriteRenderer.color = val ? Color.blue : Color.green;
+    }
+
+    public void SetMovePathIndicatorVisible(bool visible)
+    {
+        movePathLineRenderer.gameObject.SetActive(visible);
+    }
+
+    public void SetMovePathIndicator(Vector3 startPosition, Vector3 endPosition, bool valid, bool visible)
+    {
+        SetMovePathIndicatorVisible(visible);
+        if (!visible) return;
+
+        var lineColor = valid ? Color.blue : Color.green;
+        movePathLineRenderer.positionCount = 2;
+        movePathLineRenderer.startColor = lineColor;
+        movePathLineRenderer.endColor = lineColor;
+        movePathLineRenderer.SetPosition(0, new Vector3(startPosition.x, 0.02f, startPosition.z));
+        movePathLineRenderer.SetPosition(1, new Vector3(endPosition.x, 0.02f, endPosition.z));
     }
 
     public void SetActionRangeIndicatorVisible(bool visible)

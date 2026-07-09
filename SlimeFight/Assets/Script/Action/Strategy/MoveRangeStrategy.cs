@@ -16,13 +16,22 @@ public class MoveRangeStrategy : MouseTargetSelectStrategy
     protected override bool IsPositionValid(Vector3 position)
     {
         if (!mapManager.IsPositionOnMap(position)) return false;
-        return characterManager.IsWithinRange(characterRunTimeId, position, Range);
+        if (!characterManager.IsWithinRange(characterRunTimeId, position, Range)) return false;
+        return !characterManager.IsMovementPathBlocked(characterRunTimeId, position);
     }
 
     protected override void UpdateTargetDisplay(Vector3 mousePosition)
     {
+        var isValid = IsPositionValid(mousePosition);
         characterActionDisplay.SetPosition(mousePosition);
-        characterActionDisplay.SetValidTargetVisual(IsPositionValid(mousePosition));
+        characterActionDisplay.SetValidTargetVisual(isValid);
         characterActionDisplay.SetVisible(true);
+        if (!characterManager.TryGetCharacter(characterRunTimeId, out var character))
+        {
+            characterActionDisplay.SetMovePathIndicatorVisible(false);
+            return;
+        }
+
+        characterActionDisplay.SetMovePathIndicator(character.Position, mousePosition, isValid, true);
     }
 }

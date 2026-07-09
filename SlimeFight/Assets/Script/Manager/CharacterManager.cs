@@ -272,6 +272,39 @@ public class CharacterManager : MonoBehaviour
         return Vector3.Distance(source.Position, position) <= range;
     }
 
+    public bool IsMovementPathBlocked(int sourceRunTimeId, Vector3 targetPosition)
+    {
+        if (!characters.TryGetValue(sourceRunTimeId, out var source)) return true;
+
+        var sourcePosition = ToGroundPosition(source.Position);
+        var destination = ToGroundPosition(targetPosition);
+        var path = destination - sourcePosition;
+        var pathLengthSqr = path.sqrMagnitude;
+
+        foreach (var candidate in characters.Values)
+        {
+            if (candidate.RunTimeId == sourceRunTimeId) continue;
+            var candidatePosition = ToGroundPosition(candidate.Position);
+            if (pathLengthSqr <= Mathf.Epsilon)
+            {
+                if (Vector3.Distance(candidatePosition, destination) < characterSelectionRadius)
+                    return true;
+                continue;
+            }
+
+            var t = Vector3.Dot(candidatePosition - sourcePosition, path) / pathLengthSqr;
+            t = Mathf.Clamp01(t);
+            var closestPoint = sourcePosition + path * t;
+            if (Vector3.Distance(candidatePosition, closestPoint) < characterSelectionRadius)
+                return true;
+        }
+
+        return false;
+    }
+
+    Vector3 ToGroundPosition(Vector3 position)
+        => new(position.x, 0f, position.z);
+
     public bool TryGetClosestValidAttackTarget(int attackerRunTimeId, float range, out Character target)
     {
         target = null!;
