@@ -95,7 +95,7 @@ public class GameDrive : MonoBehaviour
         var orderList = characterManager.GetMovementOrder();
         foreach (var id in orderList)
         {
-            if (characterManager.GetCharacterType(id) == CharacterType.Player)
+            if (characterManager.GetCharacterType(id) == EntityType.Player)
                 await characterActionManager.RunCharacterTurn(id, gameView);
             else
                 await botActionManager.RunCharacterTurn(id, gameView);

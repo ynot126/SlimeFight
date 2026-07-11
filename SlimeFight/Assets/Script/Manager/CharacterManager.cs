@@ -11,7 +11,7 @@ public class CharacterManager : MonoBehaviour
     #region Serialized Fields
 
     [SerializeField] Transform CharacterParent = null!;
-    [SerializeField] Character characterPrefab = null!;
+    [SerializeField] Entity entityPrefab = null!;
     [SerializeField] CharacterStatusCanvas characterStatusCanvasPrefab = null!;
     [SerializeField] Canvas characterStatusCanvas = null!;
     [SerializeField] float moveSpeed = 5f;
@@ -30,13 +30,13 @@ public class CharacterManager : MonoBehaviour
 
     #region Runtime State
 
-    readonly Dictionary<int, Character> characters = new();
+    readonly Dictionary<int, Entity> characters = new();
     readonly Dictionary<int, HexCoord> characterHexes = new();
     readonly Dictionary<int, CharacterStatusCanvas> statusCanvases = new();
     readonly Dictionary<int, List<string>> characterActions = new();
     readonly Dictionary<int, BotData> botDataByRunTimeId = new();
     int currentIdCounter = 1;
-    Character? hoveredCharacter;
+    Entity? hoveredCharacter;
     CharacterStatusCanvas? hoveredStatusCanvas;
     CancellationTokenSource? hoverDelayCts;
     bool isActionExecuting;
@@ -79,22 +79,22 @@ public class CharacterManager : MonoBehaviour
     }
 
     void SpawnCharacter(CharacterData data, int runTimeId)
-        => SpawnEntity(data.stat, CharacterType.Player, runTimeId, data.actionIds);
+        => SpawnEntity(data.stat, EntityType.Player, runTimeId, data.actionIds);
 
     void SpawnEnemy(BotData data, int runTimeId)
     {
-        SpawnEntity(data.stat, CharacterType.Enemy, runTimeId, data.actionIds);
+        SpawnEntity(data.stat, EntityType.Enemy, runTimeId, data.actionIds);
         botDataByRunTimeId[runTimeId] = data;
     }
 
-    void SpawnEntity(EntityStat stat, CharacterType type, int runTimeId, IReadOnlyList<string> actionIds)
+    void SpawnEntity(EntityStat stat, EntityType type, int runTimeId, IReadOnlyList<string> actionIds)
     {
         if (!mapManager.TryGetRandomEmptyHex(out var spawnHex)) return;
 
         var spawnPosition = mapManager.HexToWorld(spawnHex);
         mapManager.TrySetOccupant(spawnHex, runTimeId);
         characterHexes[runTimeId] = spawnHex;
-        var character = Instantiate(characterPrefab, CharacterParent);
+        var character = Instantiate(entityPrefab, CharacterParent);
         character.transform.SetPositionAndRotation(spawnPosition, Quaternion.identity);
         character.Initialize(stat, type, runTimeId);
         characters[runTimeId] = character;
@@ -134,7 +134,7 @@ public class CharacterManager : MonoBehaviour
 
     void HandleMousePositionUpdate(Vector3 position)
     {
-        Character? newHovered = null;
+        Entity? newHovered = null;
         if (TryGetCharacterAtPosition(position, -1, out var hoveredRunTimeId) && TryGetCharacter(hoveredRunTimeId, out var character))
             newHovered = character;
         if (newHovered == hoveredCharacter) return;
@@ -155,19 +155,19 @@ public class CharacterManager : MonoBehaviour
         hoverDelayCts = null;
     }
 
-    async UniTaskVoid ShowStatusCanvasAfterHoverDelay(Character character)
+    async UniTaskVoid ShowStatusCanvasAfterHoverDelay(Entity entity)
     {
         hoverDelayCts = new CancellationTokenSource();
         var token = hoverDelayCts.Token;
         try
         {
             await UniTask.Delay((int)(statusCanvasHoverDelay * 1000f), cancellationToken: token);
-            if (isActionExecuting || hoveredCharacter != character) return;
-            if (!statusCanvases.TryGetValue(character.RunTimeId, out var canvas)) return;
+            if (isActionExecuting || hoveredCharacter != entity) return;
+            if (!statusCanvases.TryGetValue(entity.RunTimeId, out var canvas)) return;
 
             hoveredStatusCanvas = canvas;
-            hoveredStatusCanvas.UpdateStatus(character);
-            hoveredStatusCanvas.AnchorToWorldPosition(character.Position, mainCamera);
+            hoveredStatusCanvas.UpdateStatus(entity);
+            hoveredStatusCanvas.AnchorToWorldPosition(entity.Position, mainCamera);
             hoveredStatusCanvas.SetVisible(true);
         }
         catch (System.OperationCanceledException)
@@ -206,7 +206,7 @@ public class CharacterManager : MonoBehaviour
     public IReadOnlyList<string> GetCharacterActions(int runTimeId)
         => characterActions[runTimeId];
 
-    public CharacterType GetCharacterType(int runTimeId)
+    public EntityType GetCharacterType(int runTimeId)
         => characters[runTimeId].Type;
 
     public bool TryGetBotData(int runTimeId, out BotData botData)
@@ -288,8 +288,8 @@ public class CharacterManager : MonoBehaviour
         return true;
     }
 
-    public bool TryGetCharacter(int runTimeId, out Character character)
-        => characters.TryGetValue(runTimeId, out character);
+    public bool TryGetCharacter(int runTimeId, out Entity entity)
+        => characters.TryGetValue(runTimeId, out entity);
 
     public bool TryGetCharacterHex(int runTimeId, out HexCoord hex)
         => characterHexes.TryGetValue(runTimeId, out hex);
@@ -350,7 +350,7 @@ public class CharacterManager : MonoBehaviour
         return mapManager.GetReachableHexes(sourceHex, range, sourceRunTimeId);
     }
 
-    public bool TryGetClosestValidAttackTarget(int attackerRunTimeId, float range, out Character target)
+    public bool TryGetClosestValidAttackTarget(int attackerRunTimeId, float range, out Entity target)
     {
         target = null!;
         if (!characterHexes.TryGetValue(attackerRunTimeId, out var attackerHex)) return false;
@@ -371,7 +371,7 @@ public class CharacterManager : MonoBehaviour
         return target != null;
     }
 
-    public bool TryGetClosestOpponent(int runTimeId, out Character target)
+    public bool TryGetClosestOpponent(int runTimeId, out Entity target)
     {
         target = null!;
         if (!characterHexes.TryGetValue(runTimeId, out var characterHex)) return false;

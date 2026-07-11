@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 
-public class Character : MonoBehaviour
+public class Entity : MonoBehaviour
 {
     const float attackAnimationScale = 1.2f;
     const float attackAnimationDuration = 0.3f;
@@ -14,7 +14,7 @@ public class Character : MonoBehaviour
     [SerializeField] SpriteRenderer selectedSpriteRenderer = null!;
     
     // character data
-    CharacterType type;
+    EntityType type;
     int runTimeId;
     int currentHealth;
     int maxHealth;
@@ -25,7 +25,7 @@ public class Character : MonoBehaviour
     // public field data
     public int RunTimeId => runTimeId;
     public int Speed => speed;
-    public CharacterType Type => type;
+    public EntityType Type => type;
     public Vector3 Position => transform.position;
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth;
@@ -35,7 +35,7 @@ public class Character : MonoBehaviour
     // event function
     public event Action? OnDeath;
 
-    public void Initialize(EntityStat stat, CharacterType aType, int aRunTimeId)
+    public void Initialize(EntityStat stat, EntityType aType, int aRunTimeId)
     {
         maxHealth = stat.vitality *10;
         currentHealth = maxHealth;
@@ -93,7 +93,7 @@ public class Character : MonoBehaviour
     }
 }
 
-public enum CharacterType
+public enum EntityType
 {
     Player =1,
     Enemy =2,

@@ -25,9 +25,9 @@ public class CharacterStatusCanvas : MonoBehaviour
         canvasGroup.alpha = val ? 1 : 0;
     }
 
-    public void UpdateStatus(Character character)
+    public void UpdateStatus(Entity entity)
     {
-        characterHealthText.text = $"Health: {character.CurrentHealth}/{character.MaxHealth}";
+        characterHealthText.text = $"Health: {entity.CurrentHealth}/{entity.MaxHealth}";
     }
 
     public void AnchorToWorldPosition(Vector3 worldPosition, Camera camera)
