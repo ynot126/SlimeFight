@@ -1,11 +1,14 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 
 [Serializable]
 public class CharacterData
 {
+    public CharacterType characterType = CharacterType.Colorless;
+
     // character stat
-    public EntityStat stat;
+    public EntityStat stat = null!;
     
     // action
     public List<string> actionIds = new();

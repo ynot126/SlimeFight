@@ -46,7 +46,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   testingGameData:
     playerCharacters:
-    - stat:
+    - characterType: 200
+      stat:
         vitality: 10
         might: 1
         focus: 0

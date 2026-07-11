@@ -1,16 +1,11 @@
 #nullable enable
 using System;
 using Cysharp.Threading.Tasks;
-using DG.Tweening;
 using UnityEngine;
 
 public class Entity : MonoBehaviour
 {
-    const float attackAnimationScale = 1.2f;
-    const float attackAnimationDuration = 0.3f;
-    const float damageAnimationDuration = 0.3f;
-
-    [SerializeField] SpriteRenderer spriteRenderer = null!;
+    [SerializeField] CharacterVisual characterVisual = null!;
     [SerializeField] SpriteRenderer selectedSpriteRenderer = null!;
     
     // character data
@@ -35,9 +30,9 @@ public class Entity : MonoBehaviour
     // event function
     public event Action? OnDeath;
 
-    public void Initialize(EntityStat stat, EntityType aType, int aRunTimeId)
+    public void Initialize(EntityStat stat, EntityType aType, CharacterType characterType, int aRunTimeId)
     {
-        maxHealth = stat.vitality *10;
+        maxHealth = stat.vitality * 10;
         currentHealth = maxHealth;
         maxMana = stat.spirit;
         currentMana = maxMana;
@@ -45,6 +40,7 @@ public class Entity : MonoBehaviour
         runTimeId = aRunTimeId;
         type = aType;
 
+        characterVisual.Initialize(characterType);
         SetCharacterReadyAction(false);
     }
 
@@ -59,21 +55,9 @@ public class Entity : MonoBehaviour
         return true;
     }
 
-    public async UniTask AttackAnimation()
-    {
-        var spriteTransform = spriteRenderer.transform;
-        var originalScale = spriteTransform.localScale;
-        var targetScale = originalScale * attackAnimationScale;
-        await spriteTransform.DOScale(targetScale, attackAnimationDuration * 0.5f).SetLoops(2, LoopType.Yoyo).ToUniTask();
-        spriteTransform.localScale = originalScale;
-    }
+    public UniTask AttackAnimation() => characterVisual.AttackAnimation();
 
-    public async UniTask DamageAnimation()
-    {
-        var originalColor = spriteRenderer.color;
-        await spriteRenderer.DOColor(Color.red, damageAnimationDuration * 0.5f).SetLoops(2, LoopType.Yoyo).ToUniTask();
-        spriteRenderer.color = originalColor;
-    }
+    public UniTask DamageAnimation() => characterVisual.DamageAnimation();
 
     public void TakeDamage(int damage)
     {
@@ -88,9 +72,7 @@ public class Entity : MonoBehaviour
     }
 
     public void SetCharacterReadyAction(bool val)
-    {
-        selectedSpriteRenderer.gameObject.SetActive(val);
-    }
+        => selectedSpriteRenderer.gameObject.SetActive(val);
 }
 
 public enum EntityType

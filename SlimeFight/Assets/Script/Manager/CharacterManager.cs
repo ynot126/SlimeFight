@@ -79,15 +79,20 @@ public class CharacterManager : MonoBehaviour
     }
 
     void SpawnCharacter(CharacterData data, int runTimeId)
-        => SpawnEntity(data.stat, EntityType.Player, runTimeId, data.actionIds);
+        => SpawnEntity(data.stat, EntityType.Player, data.characterType, runTimeId, data.actionIds);
 
     void SpawnEnemy(BotData data, int runTimeId)
     {
-        SpawnEntity(data.stat, EntityType.Enemy, runTimeId, data.actionIds);
+        SpawnEntity(data.stat, EntityType.Enemy, data.characterType, runTimeId, data.actionIds);
         botDataByRunTimeId[runTimeId] = data;
     }
 
-    void SpawnEntity(EntityStat stat, EntityType type, int runTimeId, IReadOnlyList<string> actionIds)
+    void SpawnEntity(
+        EntityStat stat,
+        EntityType type,
+        CharacterType characterType,
+        int runTimeId,
+        IReadOnlyList<string> actionIds)
     {
         if (!mapManager.TryGetRandomEmptyHex(out var spawnHex)) return;
 
@@ -96,7 +101,7 @@ public class CharacterManager : MonoBehaviour
         characterHexes[runTimeId] = spawnHex;
         var character = Instantiate(entityPrefab, CharacterParent);
         character.transform.SetPositionAndRotation(spawnPosition, Quaternion.identity);
-        character.Initialize(stat, type, runTimeId);
+        character.Initialize(stat, type, characterType, runTimeId);
         characters[runTimeId] = character;
         characterActions[runTimeId] = new List<string>(actionIds);
 

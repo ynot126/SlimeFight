@@ -1,9 +1,11 @@
+#nullable enable
 using System.Collections.Generic;
 
 public class BotData
 {
     readonly string id;
-    public EntityStat stat;
+    public CharacterType characterType = CharacterType.Enemy;
+    public EntityStat stat = null!;
     public List<string> actionIds = new();
     public BotPlannerData BotPlannerData { get; private set; } = new();
 
