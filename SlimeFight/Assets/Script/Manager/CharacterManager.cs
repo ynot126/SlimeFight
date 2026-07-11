@@ -39,6 +39,7 @@ public class CharacterManager : MonoBehaviour
     Character? hoveredCharacter;
     CharacterStatusCanvas? hoveredStatusCanvas;
     CancellationTokenSource? hoverDelayCts;
+    bool isActionExecuting;
 
     #endregion
 
@@ -142,7 +143,7 @@ public class CharacterManager : MonoBehaviour
         hoveredStatusCanvas?.SetVisible(false);
         hoveredStatusCanvas = null;
         hoveredCharacter = newHovered;
-        if (hoveredCharacter == null) return;
+        if (hoveredCharacter == null || isActionExecuting) return;
 
         ShowStatusCanvasAfterHoverDelay(hoveredCharacter).Forget();
     }
@@ -161,7 +162,7 @@ public class CharacterManager : MonoBehaviour
         try
         {
             await UniTask.Delay((int)(statusCanvasHoverDelay * 1000f), cancellationToken: token);
-            if (hoveredCharacter != character) return;
+            if (isActionExecuting || hoveredCharacter != character) return;
             if (!statusCanvases.TryGetValue(character.RunTimeId, out var canvas)) return;
 
             hoveredStatusCanvas = canvas;
@@ -177,6 +178,19 @@ public class CharacterManager : MonoBehaviour
     #endregion
 
     #region Turn & Actions
+
+    public void SetActionExecuting(bool val)
+    {
+        if (isActionExecuting == val) return;
+
+        isActionExecuting = val;
+        CancelHoverDelay();
+        hoveredStatusCanvas?.SetVisible(false);
+        hoveredStatusCanvas = null;
+
+        if (!isActionExecuting && hoveredCharacter != null)
+            ShowStatusCanvasAfterHoverDelay(hoveredCharacter).Forget();
+    }
 
     public List<int> GetMovementOrder()
     {

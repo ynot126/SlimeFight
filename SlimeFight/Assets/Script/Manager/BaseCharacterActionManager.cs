@@ -76,7 +76,16 @@ public abstract class BaseCharacterActionManager : MonoBehaviour
         if (!action.HasSelectedTarget) return;
         if (!CharacterManager.TrySpendMana(ActiveCharacterRunTimeId, action.ManaCost)) return;
 
-        await action.ExecuteAsync();
+        CharacterManager.SetActionExecuting(true);
+        try
+        {
+            await action.ExecuteAsync();
+        }
+        finally
+        {
+            CharacterManager.SetActionExecuting(false);
+        }
+
         action.Reset();
         OnActionExecuted();
     }
