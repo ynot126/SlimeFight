@@ -9,7 +9,6 @@ public abstract class MouseTargetSelectStrategy : BaseTargetSelectStrategy
 {
     UniTaskCompletionSource<List<ActionTarget>>? selectionTcs;
 
-    public abstract ActionRangeType RangeType { get; }
     public abstract float Range { get; }
 
     public async UniTask<List<ActionTarget>?> GetTarget(CancellationToken ct)

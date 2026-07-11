@@ -29,12 +29,3 @@ public abstract class BaseTargetSelectStrategy
         mapManager.ClearRange();
     }
 }
-
-public enum ActionRangeType
-{
-    None,
-    Melee,
-    Ranged,
-    Move,
-    World,
-}

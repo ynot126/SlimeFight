@@ -1,14 +1,13 @@
 #nullable enable
 public class EnemyInRangeStrategy : MouseTargetSelectStrategy
 {
-    readonly ActionRangeType rangeType;
+    readonly float range;
 
-    public override ActionRangeType RangeType => rangeType;
-    public override float Range => ActionLibrary.GetRange(rangeType);
+    public override float Range => range;
 
-    public EnemyInRangeStrategy(ActionRangeType rangeType)
+    public EnemyInRangeStrategy(float range)
     {
-        this.rangeType = rangeType;
+        this.range = range;
     }
 
     protected override bool IsHexValid(HexCoord hex)

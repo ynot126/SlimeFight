@@ -1,26 +1,45 @@
 #nullable enable
+using System.Collections.Generic;
+using UnityEngine;
+
 public class MoveRangeStrategy : MouseTargetSelectStrategy
 {
-    readonly ActionRangeType rangeType;
+    readonly float range;
+    readonly HashSet<HexCoord> reachableHexes = new();
 
-    public override ActionRangeType RangeType => rangeType;
-    public override float Range => ActionLibrary.GetRange(rangeType);
+    public override float Range => range;
 
-    public MoveRangeStrategy(ActionRangeType rangeType)
+    public MoveRangeStrategy(float range)
     {
-        this.rangeType = rangeType;
+        this.range = range;
     }
 
     protected override bool IsHexValid(HexCoord hex)
     {
-        if (!mapManager.IsHexOnMap(hex)) return false;
-        var position = mapManager.HexToWorld(hex);
-        if (!characterManager.IsWithinRange(characterRunTimeId, position, Range)) return false;
-        return !characterManager.IsMovementPathBlocked(characterRunTimeId, position);
+        return mapManager.IsHexOnMap(hex) && reachableHexes.Contains(hex);
+    }
+
+    public override void ShowTargetPreview()
+    {
+        reachableHexes.Clear();
+        var reachable = characterManager.GetReachableHexes(
+            characterRunTimeId,
+            Mathf.RoundToInt(Range));
+
+        foreach (var hex in reachable.Keys)
+            reachableHexes.Add(hex);
+
+        mapManager.ShowRange(reachableHexes);
     }
 
     protected override void UpdateTargetDisplay(HexCoord hex)
     {
         mapManager.ShowHover(hex, IsHexValid(hex));
+    }
+
+    protected override void ClearTargetDisplay()
+    {
+        base.ClearTargetDisplay();
+        reachableHexes.Clear();
     }
 }
