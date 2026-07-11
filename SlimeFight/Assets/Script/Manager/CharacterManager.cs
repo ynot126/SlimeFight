@@ -15,7 +15,6 @@ public class CharacterManager : MonoBehaviour
     [SerializeField] CharacterStatusCanvas characterStatusCanvasPrefab = null!;
     [SerializeField] Canvas characterStatusCanvas = null!;
     [SerializeField] float moveSpeed = 5f;
-    [SerializeField] float characterSelectionRadius = 0.75f;
     [SerializeField] float statusCanvasHoverDelay = 0.2f;
 
     #endregion
@@ -32,6 +31,7 @@ public class CharacterManager : MonoBehaviour
     #region Runtime State
 
     readonly Dictionary<int, Character> characters = new();
+    readonly Dictionary<int, HexCoord> characterHexes = new();
     readonly Dictionary<int, CharacterStatusCanvas> statusCanvases = new();
     readonly Dictionary<int, List<string>> characterActions = new();
     readonly Dictionary<int, BotData> botDataByRunTimeId = new();
@@ -88,8 +88,11 @@ public class CharacterManager : MonoBehaviour
 
     void SpawnEntity(EntityStat stat, CharacterType type, int runTimeId, IReadOnlyList<string> actionIds)
     {
-        var mapPosition = mapManager.GetRandomPositionOnMap();
-        var spawnPosition = new Vector3(mapPosition.x, 0f, mapPosition.z);
+        if (!mapManager.TryGetRandomEmptyHex(out var spawnHex)) return;
+
+        var spawnPosition = mapManager.HexToWorld(spawnHex);
+        mapManager.TrySetOccupant(spawnHex, runTimeId);
+        characterHexes[runTimeId] = spawnHex;
         var character = Instantiate(characterPrefab, CharacterParent);
         character.transform.SetPositionAndRotation(spawnPosition, Quaternion.identity);
         character.Initialize(stat, type, runTimeId);
@@ -116,8 +119,10 @@ public class CharacterManager : MonoBehaviour
             hoveredStatusCanvas = null;
 
         Destroy(statusCanvas.gameObject);
+        mapManager.ClearOccupant(runTimeId);
         statusCanvases.Remove(runTimeId);
         characters.Remove(runTimeId);
+        characterHexes.Remove(runTimeId);
         characterActions.Remove(runTimeId);
         botDataByRunTimeId.Remove(runTimeId);
     }
@@ -213,14 +218,39 @@ public class CharacterManager : MonoBehaviour
 
     public async UniTask CharacterMoveToPosition(int runTimeId, Vector3 position)
     {
-        var characterTransform = characters[runTimeId].transform;
-        var start = characterTransform.position;
-        var end = new Vector3(position.x, 0f, position.z);
-        var distance = Vector3.Distance(start, end);
-        if (distance <= Mathf.Epsilon) return;
+        if (!mapManager.TryWorldToHex(position, out var destination)) return;
+        await CharacterMoveToHex(runTimeId, destination);
+    }
 
-        var duration = distance / moveSpeed;
-        await characterTransform.DOMove(end, duration).SetEase(Ease.Linear).ToUniTask();
+    public async UniTask CharacterMoveToHex(int runTimeId, HexCoord destination)
+    {
+        if (!characters.TryGetValue(runTimeId, out var character)) return;
+        if (!characterHexes.TryGetValue(runTimeId, out var startHex)) return;
+        if (!mapManager.IsHexOnMap(destination)) return;
+        if (mapManager.IsHexOccupied(destination, runTimeId)) return;
+        if (!mapManager.TryFindPath(startHex, destination, runTimeId, out var path)) return;
+        if (path.Count <= 1) return;
+
+        mapManager.ClearOccupant(startHex, runTimeId);
+        if (!mapManager.TrySetOccupant(destination, runTimeId))
+        {
+            mapManager.TrySetOccupant(startHex, runTimeId);
+            return;
+        }
+
+        characterHexes[runTimeId] = destination;
+        var characterTransform = character.transform;
+        for (var i = 1; i < path.Count; i++)
+        {
+            var end = mapManager.HexToWorld(path[i]);
+            var distance = Vector3.Distance(characterTransform.position, end);
+            if (distance <= Mathf.Epsilon) continue;
+
+            var duration = distance / moveSpeed;
+            await characterTransform.DOMove(end, duration).SetEase(Ease.Linear).ToUniTask();
+        }
+
+        characterTransform.position = mapManager.HexToWorld(destination);
     }
 
     #endregion
@@ -236,21 +266,19 @@ public class CharacterManager : MonoBehaviour
     public bool TryGetCharacterAtPosition(Vector3 position, int excludeRunTimeId, out int runTimeId)
     {
         runTimeId = 0;
-        var closestDistance = characterSelectionRadius;
-        foreach (var candidate in characters.Values)
-        {
-            if (candidate.RunTimeId == excludeRunTimeId) continue;
-            var distance = Vector3.Distance(candidate.Position, position);
-            if (distance >= closestDistance) continue;
-            closestDistance = distance;
-            runTimeId = candidate.RunTimeId;
-        }
+        if (!mapManager.TryWorldToHex(position, out var hex)) return false;
+        if (!mapManager.TryGetOccupant(hex, out var occupantRunTimeId)) return false;
+        if (occupantRunTimeId == excludeRunTimeId) return false;
 
-        return runTimeId != 0;
+        runTimeId = occupantRunTimeId;
+        return true;
     }
 
     public bool TryGetCharacter(int runTimeId, out Character character)
         => characters.TryGetValue(runTimeId, out character);
+
+    public bool TryGetCharacterHex(int runTimeId, out HexCoord hex)
+        => characterHexes.TryGetValue(runTimeId, out hex);
 
     public bool IsValidAttackTarget(int attackerRunTimeId, int targetRunTimeId)
     {
@@ -268,61 +296,58 @@ public class CharacterManager : MonoBehaviour
 
     public bool IsWithinRange(int sourceRunTimeId, int targetRunTimeId, float range)
     {
-        if (!characters.TryGetValue(sourceRunTimeId, out var source)) return false;
-        if (!characters.TryGetValue(targetRunTimeId, out var target)) return false;
-        return Vector3.Distance(source.Position, target.Position) <= range;
+        if (!characterHexes.TryGetValue(sourceRunTimeId, out var sourceHex)) return false;
+        if (!characterHexes.TryGetValue(targetRunTimeId, out var targetHex)) return false;
+        return mapManager.GetHexDistance(sourceHex, targetHex) <= Mathf.RoundToInt(range);
     }
 
     public bool IsWithinRange(int sourceRunTimeId, Vector3 position, float range)
     {
-        if (!characters.TryGetValue(sourceRunTimeId, out var source)) return false;
-        return Vector3.Distance(source.Position, position) <= range;
+        if (!characterHexes.TryGetValue(sourceRunTimeId, out var sourceHex)) return false;
+        if (!mapManager.TryWorldToHex(position, out var targetHex)) return false;
+        return mapManager.GetHexDistance(sourceHex, targetHex) <= Mathf.RoundToInt(range);
     }
 
     public bool IsMovementPathBlocked(int sourceRunTimeId, Vector3 targetPosition)
     {
-        if (!characters.TryGetValue(sourceRunTimeId, out var source)) return true;
-
-        var sourcePosition = ToGroundPosition(source.Position);
-        var destination = ToGroundPosition(targetPosition);
-        var path = destination - sourcePosition;
-        var pathLengthSqr = path.sqrMagnitude;
-
-        foreach (var candidate in characters.Values)
-        {
-            if (candidate.RunTimeId == sourceRunTimeId) continue;
-            var candidatePosition = ToGroundPosition(candidate.Position);
-            if (pathLengthSqr <= Mathf.Epsilon)
-            {
-                if (Vector3.Distance(candidatePosition, destination) < characterSelectionRadius)
-                    return true;
-                continue;
-            }
-
-            var t = Vector3.Dot(candidatePosition - sourcePosition, path) / pathLengthSqr;
-            t = Mathf.Clamp01(t);
-            var closestPoint = sourcePosition + path * t;
-            if (Vector3.Distance(candidatePosition, closestPoint) < characterSelectionRadius)
-                return true;
-        }
-
-        return false;
+        if (!characterHexes.TryGetValue(sourceRunTimeId, out var sourceHex)) return true;
+        if (!mapManager.TryWorldToHex(targetPosition, out var destination)) return true;
+        if (mapManager.IsHexOccupied(destination, sourceRunTimeId)) return true;
+        return !mapManager.TryFindPath(sourceHex, destination, sourceRunTimeId, out _);
     }
 
-    Vector3 ToGroundPosition(Vector3 position)
-        => new(position.x, 0f, position.z);
+    public bool TryGetPathToPosition(int sourceRunTimeId, Vector3 targetPosition, out List<Vector3> pathPositions)
+    {
+        pathPositions = new List<Vector3>();
+        if (!characterHexes.TryGetValue(sourceRunTimeId, out var sourceHex)) return false;
+        if (!mapManager.TryWorldToHex(targetPosition, out var destination)) return false;
+        if (!mapManager.TryFindPath(sourceHex, destination, sourceRunTimeId, out var path)) return false;
+
+        foreach (var hex in path)
+            pathPositions.Add(mapManager.HexToWorld(hex));
+        return true;
+    }
+
+    public Dictionary<HexCoord, int> GetReachableHexes(int sourceRunTimeId, int range)
+    {
+        if (!characterHexes.TryGetValue(sourceRunTimeId, out var sourceHex))
+            return new Dictionary<HexCoord, int>();
+
+        return mapManager.GetReachableHexes(sourceHex, range, sourceRunTimeId);
+    }
 
     public bool TryGetClosestValidAttackTarget(int attackerRunTimeId, float range, out Character target)
     {
         target = null!;
-        if (!characters.TryGetValue(attackerRunTimeId, out var attacker)) return false;
+        if (!characterHexes.TryGetValue(attackerRunTimeId, out var attackerHex)) return false;
 
         var closestDistance = float.MaxValue;
         foreach (var candidate in characters.Values)
         {
             if (!IsValidAttackTarget(attackerRunTimeId, candidate.RunTimeId)) continue;
+            if (!characterHexes.TryGetValue(candidate.RunTimeId, out var candidateHex)) continue;
 
-            var distance = Vector3.Distance(attacker.Position, candidate.Position);
+            var distance = mapManager.GetHexDistance(attackerHex, candidateHex);
             if (distance > range || distance >= closestDistance) continue;
 
             closestDistance = distance;
@@ -335,14 +360,15 @@ public class CharacterManager : MonoBehaviour
     public bool TryGetClosestOpponent(int runTimeId, out Character target)
     {
         target = null!;
-        if (!characters.TryGetValue(runTimeId, out var character)) return false;
+        if (!characterHexes.TryGetValue(runTimeId, out var characterHex)) return false;
 
         var closestDistance = float.MaxValue;
         foreach (var candidate in characters.Values)
         {
             if (!IsValidAttackTarget(runTimeId, candidate.RunTimeId)) continue;
+            if (!characterHexes.TryGetValue(candidate.RunTimeId, out var candidateHex)) continue;
 
-            var distance = Vector3.Distance(character.Position, candidate.Position);
+            var distance = mapManager.GetHexDistance(characterHex, candidateHex);
             if (distance >= closestDistance) continue;
 
             closestDistance = distance;

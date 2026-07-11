@@ -13,17 +13,18 @@ public class MoveRangeStrategy : MouseTargetSelectStrategy
         this.rangeType = rangeType;
     }
 
-    protected override bool IsPositionValid(Vector3 position)
+    protected override bool IsHexValid(HexCoord hex)
     {
-        if (!mapManager.IsPositionOnMap(position)) return false;
+        if (!mapManager.IsHexOnMap(hex)) return false;
+        var position = mapManager.HexToWorld(hex);
         if (!characterManager.IsWithinRange(characterRunTimeId, position, Range)) return false;
         return !characterManager.IsMovementPathBlocked(characterRunTimeId, position);
     }
 
-    protected override void UpdateTargetDisplay(Vector3 mousePosition)
+    protected override void UpdateTargetDisplay(HexCoord hex, Vector3 snappedPosition)
     {
-        var isValid = IsPositionValid(mousePosition);
-        characterActionDisplay.SetPosition(mousePosition);
+        var isValid = IsHexValid(hex);
+        characterActionDisplay.SetPosition(snappedPosition);
         characterActionDisplay.SetValidTargetVisual(isValid);
         characterActionDisplay.SetVisible(true);
         if (!characterManager.TryGetCharacter(characterRunTimeId, out var character))
@@ -32,6 +33,9 @@ public class MoveRangeStrategy : MouseTargetSelectStrategy
             return;
         }
 
-        characterActionDisplay.SetMovePathIndicator(character.Position, mousePosition, isValid, true);
+        if (characterManager.TryGetPathToPosition(characterRunTimeId, snappedPosition, out var pathPositions))
+            characterActionDisplay.SetMovePathIndicator(pathPositions, isValid, true);
+        else
+            characterActionDisplay.SetMovePathIndicator(character.Position, snappedPosition, isValid, true);
     }
 }

@@ -21,7 +21,7 @@ public abstract class MouseTargetSelectStrategy : BaseTargetSelectStrategy
 
         try
         {
-            UpdateTargetDisplay(inputManager.CurrentMousePosition);
+            UpdateTargetDisplayForMousePosition(inputManager.CurrentMousePosition);
 
             using (ct.Register(CancelSelection))
                 return await selectionTcs.Task;
@@ -41,18 +41,20 @@ public abstract class MouseTargetSelectStrategy : BaseTargetSelectStrategy
 
     void HandleMouseClick(Vector3 position)
     {
-        if (!IsPositionValid(position)) return;
+        if (!mapManager.TryWorldToHex(position, out var hex)) return;
+        if (!IsHexValid(hex)) return;
 
         var targetCharacterRunTimeId = -1;
-        if (characterManager.TryGetCharacterAtPosition(position, characterRunTimeId, out var foundRunTimeId))
+        var snappedPosition = mapManager.HexToWorld(hex);
+        if (characterManager.TryGetCharacterAtPosition(snappedPosition, characterRunTimeId, out var foundRunTimeId))
             targetCharacterRunTimeId = foundRunTimeId;
 
-        selectionTcs?.TrySetResult(new List<ActionTarget> { new ActionTarget(position, targetCharacterRunTimeId) });
+        selectionTcs?.TrySetResult(new List<ActionTarget> { new ActionTarget(hex, snappedPosition, targetCharacterRunTimeId) });
     }
 
     void HandleMousePositionUpdate(Vector3 mousePosition)
     {
-        UpdateTargetDisplay(mousePosition);
+        UpdateTargetDisplayForMousePosition(mousePosition);
     }
 
     void CancelSelection()
@@ -60,18 +62,35 @@ public abstract class MouseTargetSelectStrategy : BaseTargetSelectStrategy
         selectionTcs?.TrySetCanceled();
     }
 
-    protected abstract void UpdateTargetDisplay(Vector3 mousePosition);
-    protected abstract bool IsPositionValid(Vector3 position);
+    void UpdateTargetDisplayForMousePosition(Vector3 mousePosition)
+    {
+        if (!mapManager.TryWorldToHex(mousePosition, out var hex))
+        {
+            characterActionDisplay.SetVisible(false);
+            characterActionDisplay.SetMovePathIndicatorVisible(false);
+            return;
+        }
+
+        UpdateTargetDisplay(hex, mapManager.HexToWorld(hex));
+    }
+
+    protected abstract void UpdateTargetDisplay(HexCoord hex, Vector3 snappedPosition);
+    protected abstract bool IsHexValid(HexCoord hex);
 
     public override void ShowTargetPreview()
     {
-        if (!characterManager.TryGetCharacter(characterRunTimeId, out var character))
+        if (!characterManager.TryGetCharacterHex(characterRunTimeId, out var characterHex))
         {
             characterActionDisplay.SetActionRangeIndicatorVisible(false);
             return;
         }
 
-        characterActionDisplay.SetActionRangeIndicator(character.Position, Range, true);
+        var hexes = mapManager.GetHexesInRange(characterHex, Mathf.RoundToInt(Range));
+        var hexCenters = new List<Vector3>();
+        foreach (var hex in hexes)
+            hexCenters.Add(mapManager.HexToWorld(hex));
+
+        characterActionDisplay.SetHexRangeIndicator(hexCenters, mapManager.HexSize, true);
     }
 
     protected virtual void ClearTargetDisplay()

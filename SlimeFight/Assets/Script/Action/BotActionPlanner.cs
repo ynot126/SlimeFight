@@ -60,10 +60,12 @@ public class BotActionPlanner
                 out var target))
             return false;
 
+        if (!characterManager.TryGetCharacterHex(target.RunTimeId, out var targetHex)) return false;
+
         action.Reset();
         action.SetSelectedTargets(new List<ActionTarget>
         {
-            new(target.Position, target.RunTimeId)
+            new(targetHex, target.Position, target.RunTimeId)
         });
         plannedActionCount++;
         return true;
@@ -73,23 +75,32 @@ public class BotActionPlanner
     {
         if (action.TargetStrategy is not MoveRangeStrategy moveRangeStrategy) return false;
         if (!characterManager.CanAffordMana(activeCharacterRunTimeId, action.ManaCost)) return false;
-        if (!characterManager.TryGetCharacter(activeCharacterRunTimeId, out var activeCharacter)) return false;
+        if (!characterManager.TryGetCharacterHex(activeCharacterRunTimeId, out var activeHex)) return false;
         if (!characterManager.TryGetClosestOpponent(activeCharacterRunTimeId, out var target)) return false;
+        if (!characterManager.TryGetCharacterHex(target.RunTimeId, out var targetHex)) return false;
 
-        var direction = target.Position - activeCharacter.Position;
-        direction.y = 0f;
-        var distance = direction.magnitude;
-        if (distance <= Mathf.Epsilon) return false;
+        var reachableHexes = characterManager.GetReachableHexes(activeCharacterRunTimeId, Mathf.RoundToInt(moveRangeStrategy.Range));
+        var currentDistance = mapManager.GetHexDistance(activeHex, targetHex);
+        var bestDistance = currentDistance;
+        var bestHex = activeHex;
+        foreach (var pair in reachableHexes)
+        {
+            var candidateHex = pair.Key;
+            if (candidateHex == activeHex) continue;
 
-        var moveDistance = Mathf.Min(moveRangeStrategy.Range, distance);
-        var movePosition = activeCharacter.Position + direction.normalized * moveDistance;
-        if (!mapManager.IsPositionOnMap(movePosition)) return false;
-        if (characterManager.IsMovementPathBlocked(activeCharacterRunTimeId, movePosition)) return false;
+            var distance = mapManager.GetHexDistance(candidateHex, targetHex);
+            if (distance >= bestDistance) continue;
+
+            bestDistance = distance;
+            bestHex = candidateHex;
+        }
+
+        if (bestHex == activeHex) return false;
 
         action.Reset();
         action.SetSelectedTargets(new List<ActionTarget>
         {
-            new(movePosition)
+            new(bestHex, mapManager.HexToWorld(bestHex))
         });
         plannedActionCount++;
         return true;

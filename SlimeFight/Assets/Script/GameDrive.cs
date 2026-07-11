@@ -45,7 +45,6 @@ public class GameDrive : MonoBehaviour
         
         inputManager = Instantiate(inputManagerPrefab);
         inputManager.Initialize(Camera.main!);
-        gameCameraController.Initialize(inputManager, new Bounds(Vector3.zero, new Vector3(10f, 1f, 10f)));
         
         gameData = DataManager.Instance.GetGameData();
 
@@ -72,6 +71,7 @@ public class GameDrive : MonoBehaviour
         ViewManager.Instance.PushView(gameView);
         
         await mapManager.CreateMap();
+        gameCameraController.Initialize(inputManager, mapManager.MapWorldBounds);
         await characterManager.SpawnCharacter();
         await characterManager.SpawnEnemy();
         await GameLoop();
