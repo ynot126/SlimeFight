@@ -1,6 +1,4 @@
 #nullable enable
-using UnityEngine;
-
 public class MoveRangeStrategy : MouseTargetSelectStrategy
 {
     readonly ActionRangeType rangeType;
@@ -21,21 +19,8 @@ public class MoveRangeStrategy : MouseTargetSelectStrategy
         return !characterManager.IsMovementPathBlocked(characterRunTimeId, position);
     }
 
-    protected override void UpdateTargetDisplay(HexCoord hex, Vector3 snappedPosition)
+    protected override void UpdateTargetDisplay(HexCoord hex)
     {
-        var isValid = IsHexValid(hex);
-        characterActionDisplay.SetPosition(snappedPosition);
-        characterActionDisplay.SetValidTargetVisual(isValid);
-        characterActionDisplay.SetVisible(true);
-        if (!characterManager.TryGetCharacter(characterRunTimeId, out var character))
-        {
-            characterActionDisplay.SetMovePathIndicatorVisible(false);
-            return;
-        }
-
-        if (characterManager.TryGetPathToPosition(characterRunTimeId, snappedPosition, out var pathPositions))
-            characterActionDisplay.SetMovePathIndicator(pathPositions, isValid, true);
-        else
-            characterActionDisplay.SetMovePathIndicator(character.Position, snappedPosition, isValid, true);
+        mapManager.ShowHover(hex, IsHexValid(hex));
     }
 }

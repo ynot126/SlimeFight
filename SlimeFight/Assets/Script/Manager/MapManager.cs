@@ -14,6 +14,8 @@ public class MapManager : MonoBehaviour
     readonly Dictionary<HexCoord, int> occupants = new();
     readonly Dictionary<HexCoord, HexGrid> hexGridVisuals = new();
     readonly HashSet<HexCoord> rangeHexes = new();
+    HexCoord? hoveredHex;
+    bool isHoveredHexValid;
     Bounds mapWorldBounds;
 
     public float HexSize => hexSize;
@@ -158,22 +160,57 @@ public class MapManager : MonoBehaviour
 
         foreach (var hex in range)
         {
-            if (!hexGridVisuals.TryGetValue(hex, out var hexGrid)) continue;
+            if (!hexGridVisuals.ContainsKey(hex)) continue;
 
-            hexGrid.SetState(HexGridState.Range);
             rangeHexes.Add(hex);
+            RefreshHexGridState(hex);
         }
     }
 
     public void ClearRange()
     {
         foreach (var hex in rangeHexes)
-        {
-            if (hexGridVisuals.TryGetValue(hex, out var hexGrid))
-                hexGrid.SetState(HexGridState.Normal);
-        }
+            RefreshHexGridState(hex, false);
 
         rangeHexes.Clear();
+    }
+
+    public void ShowHover(HexCoord hex, bool isValid)
+    {
+        var previousHoveredHex = hoveredHex;
+        hoveredHex = hex;
+        isHoveredHexValid = isValid;
+
+        if (previousHoveredHex.HasValue && previousHoveredHex.Value != hex)
+            RefreshHexGridState(previousHoveredHex.Value);
+
+        RefreshHexGridState(hex);
+    }
+
+    public void ClearHover()
+    {
+        if (!hoveredHex.HasValue) return;
+
+        var hex = hoveredHex.Value;
+        hoveredHex = null;
+        RefreshHexGridState(hex);
+    }
+
+    void RefreshHexGridState(HexCoord hex, bool? isInRangeOverride = null)
+    {
+        if (!hexGridVisuals.TryGetValue(hex, out var hexGrid)) return;
+
+        if (hoveredHex.HasValue && hoveredHex.Value == hex)
+        {
+            hexGrid.SetState(isHoveredHexValid
+                ? HexGridState.ValidHover
+                : HexGridState.InvalidHover);
+            return;
+        }
+
+        hexGrid.SetState((isInRangeOverride ?? rangeHexes.Contains(hex))
+            ? HexGridState.Range
+            : HexGridState.Normal);
     }
 
     void GenerateHexes()
@@ -235,5 +272,6 @@ public class MapManager : MonoBehaviour
 
         hexGridVisuals.Clear();
         rangeHexes.Clear();
+        hoveredHex = null;
     }
 }

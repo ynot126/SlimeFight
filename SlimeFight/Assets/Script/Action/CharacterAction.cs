@@ -23,15 +23,14 @@ public class CharacterAction
         CharacterManager aCharacterManager,
         MapManager aMapManager,
         InputManager inputManager,
-        int aActiveCharacterRunTimeId,
-        CharacterActionDisplay targetSelectDisplay)
+        int aActiveCharacterRunTimeId)
     {
         data = actionData;
         characterManager = aCharacterManager;
         mapManager = aMapManager;
         activeCharacterRunTimeId = aActiveCharacterRunTimeId;
         data.BaseTargetStrategy.Initialize(
-            aCharacterManager, aMapManager, inputManager, aActiveCharacterRunTimeId, targetSelectDisplay);
+            aCharacterManager, aMapManager, inputManager, aActiveCharacterRunTimeId);
     }
 
     public void Reset()

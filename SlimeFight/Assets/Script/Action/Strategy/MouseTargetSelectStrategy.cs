@@ -66,22 +66,20 @@ public abstract class MouseTargetSelectStrategy : BaseTargetSelectStrategy
     {
         if (!mapManager.TryWorldToHex(mousePosition, out var hex))
         {
-            characterActionDisplay.SetVisible(false);
-            characterActionDisplay.SetMovePathIndicatorVisible(false);
+            mapManager.ClearHover();
             return;
         }
 
-        UpdateTargetDisplay(hex, mapManager.HexToWorld(hex));
+        UpdateTargetDisplay(hex);
     }
 
-    protected abstract void UpdateTargetDisplay(HexCoord hex, Vector3 snappedPosition);
+    protected abstract void UpdateTargetDisplay(HexCoord hex);
     protected abstract bool IsHexValid(HexCoord hex);
 
     public override void ShowTargetPreview()
     {
         if (!characterManager.TryGetCharacterHex(characterRunTimeId, out var characterHex))
         {
-            characterActionDisplay.SetActionRangeIndicatorVisible(false);
             mapManager.ClearRange();
             return;
         }
@@ -93,6 +91,6 @@ public abstract class MouseTargetSelectStrategy : BaseTargetSelectStrategy
     protected virtual void ClearTargetDisplay()
     {
         mapManager.ClearRange();
-        characterActionDisplay.Cleanup();
+        mapManager.ClearHover();
     }
 }

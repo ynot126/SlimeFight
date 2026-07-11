@@ -191,3 +191,5 @@ MonoBehaviour:
   spriteRenderer: {fileID: 4810642614062140327}
   normalColor: {r: 1, g: 1, b: 1, a: 1}
   rangeColor: {r: 0, g: 0, b: 1, a: 1}
+  validHoverColor: {r: 0, g: 1, b: 1, a: 1}
+  invalidHoverColor: {r: 1, g: 0, b: 0, a: 1}

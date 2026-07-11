@@ -1,6 +1,4 @@
 #nullable enable
-using UnityEngine;
-
 public class EnemyInRangeStrategy : MouseTargetSelectStrategy
 {
     readonly ActionRangeType rangeType;
@@ -24,10 +22,8 @@ public class EnemyInRangeStrategy : MouseTargetSelectStrategy
         return characterManager.IsWithinRange(characterRunTimeId, targetRunTimeId, Range);
     }
 
-    protected override void UpdateTargetDisplay(HexCoord hex, Vector3 snappedPosition)
+    protected override void UpdateTargetDisplay(HexCoord hex)
     {
-        characterActionDisplay.SetPosition(snappedPosition);
-        characterActionDisplay.SetValidTargetVisual(IsHexValid(hex));
-        characterActionDisplay.SetVisible(true);
+        mapManager.ShowHover(hex, IsHexValid(hex));
     }
 }

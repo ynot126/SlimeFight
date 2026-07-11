@@ -6,9 +6,6 @@ using UnityEngine;
 
 public abstract class BaseCharacterActionManager : MonoBehaviour
 {
-    [SerializeField] CharacterActionDisplay characterActionDisplayPrefab = null!;
-
-    protected CharacterActionDisplay TargetSelectDisplay { get; private set; } = null!;
     protected CharacterManager CharacterManager { get; private set; } = null!;
     protected MapManager MapManager { get; private set; } = null!;
     protected InputManager InputManager { get; private set; } = null!;
@@ -24,16 +21,6 @@ public abstract class BaseCharacterActionManager : MonoBehaviour
         CharacterManager = aCharacterManager;
         MapManager = aMapManager;
         InputManager = aInputManager;
-        if (characterActionDisplayPrefab == null) return;
-
-        TargetSelectDisplay = Instantiate(characterActionDisplayPrefab);
-        TargetSelectDisplay.Initialize();
-    }
-
-    protected virtual void OnDestroy()
-    {
-        if (TargetSelectDisplay != null)
-            Destroy(TargetSelectDisplay.gameObject);
     }
 
     public async UniTask RunCharacterTurn(int runTimeId, GameView gameView)
@@ -104,8 +91,7 @@ public abstract class BaseCharacterActionManager : MonoBehaviour
             CharacterManager,
             MapManager,
             InputManager,
-            runTimeId,
-            TargetSelectDisplay);
+            runTimeId);
 
     protected void RequestEndTurn()
     {
@@ -114,9 +100,7 @@ public abstract class BaseCharacterActionManager : MonoBehaviour
 
     protected virtual void HideActionRangeIndicator()
     {
-        if (TargetSelectDisplay == null) return;
-
         MapManager.ClearRange();
-        TargetSelectDisplay.SetActionRangeIndicatorVisible(false);
+        MapManager.ClearHover();
     }
 }

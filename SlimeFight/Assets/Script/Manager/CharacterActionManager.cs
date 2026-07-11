@@ -218,7 +218,7 @@ public class CharacterActionManager : BaseCharacterActionManager
     protected override void HideActionRangeIndicator()
     {
         MapManager.ClearRange();
-        TargetSelectDisplay.SetActionRangeIndicatorVisible(false);
+        MapManager.ClearHover();
     }
 
     void HandleEndTurnButtonPressed()

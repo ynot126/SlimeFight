@@ -5,6 +5,8 @@ public enum HexGridState
 {
     Normal,
     Range,
+    ValidHover,
+    InvalidHover,
 }
 
 public class HexGrid : MonoBehaviour
@@ -12,6 +14,8 @@ public class HexGrid : MonoBehaviour
     [SerializeField] SpriteRenderer spriteRenderer = null!;
     [SerializeField] Color normalColor = Color.white;
     [SerializeField] Color rangeColor = Color.blue;
+    [SerializeField] Color validHoverColor = Color.cyan;
+    [SerializeField] Color invalidHoverColor = Color.red;
 
     public HexCoord Coord { get; private set; }
     public HexGridState State { get; private set; }
@@ -31,8 +35,12 @@ public class HexGrid : MonoBehaviour
     public void SetState(HexGridState state)
     {
         State = state;
-        spriteRenderer.color = state == HexGridState.Range
-            ? rangeColor
-            : normalColor;
+        spriteRenderer.color = state switch
+        {
+            HexGridState.Range => rangeColor,
+            HexGridState.ValidHover => validHoverColor,
+            HexGridState.InvalidHover => invalidHoverColor,
+            _ => normalColor,
+        };
     }
 }
