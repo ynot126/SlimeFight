@@ -45,5 +45,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mapRadius: 4
-  hexSize: 1
+  hexSize: 0.5
   hexGridPrefab: {fileID: 8116050183672706243, guid: 917ca82c2d2a27a4687380c7a037627d, type: 3}

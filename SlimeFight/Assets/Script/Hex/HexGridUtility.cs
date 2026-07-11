@@ -18,15 +18,15 @@ public static class HexGridUtility
 
     public static Vector3 HexToWorld(HexCoord hex, float hexSize)
     {
-        var x = hexSize * Mathf.Sqrt(3f) * (hex.Q + hex.R * 0.5f);
-        var z = hexSize * 1.5f * hex.R;
+        var x = hexSize * 1.5f * hex.Q;
+        var z = hexSize * Mathf.Sqrt(3f) * (hex.R + hex.Q * 0.5f);
         return new Vector3(x, 0f, z);
     }
 
     public static HexCoord WorldToHex(Vector3 position, float hexSize)
     {
-        var q = (Mathf.Sqrt(3f) / 3f * position.x - 1f / 3f * position.z) / hexSize;
-        var r = (2f / 3f * position.z) / hexSize;
+        var q = (2f / 3f * position.x) / hexSize;
+        var r = (-1f / 3f * position.x + Mathf.Sqrt(3f) / 3f * position.z) / hexSize;
         return RoundAxial(q, r);
     }
 
@@ -52,7 +52,7 @@ public static class HexGridUtility
         var corners = new Vector3[6];
         for (var i = 0; i < corners.Length; i++)
         {
-            var angle = Mathf.Deg2Rad * (60f * i - 30f);
+            var angle = Mathf.Deg2Rad * 60f * i;
             corners[i] = new Vector3(
                 center.x + hexSize * Mathf.Cos(angle),
                 y,

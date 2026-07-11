@@ -20,10 +20,10 @@ public class HexGrid : MonoBehaviour
     {
         Coord = coord;
 
-        var spriteHeight = spriteRenderer.sprite != null
-            ? spriteRenderer.sprite.bounds.size.y
+        var spriteWidth = spriteRenderer.sprite != null
+            ? spriteRenderer.sprite.bounds.size.x
             : 1f;
-        transform.localScale = Vector3.one * (hexSize * 2f / spriteHeight);
+        transform.localScale = Vector3.one * (hexSize * 2f / spriteWidth);
 
         SetState(HexGridState.Normal);
     }
