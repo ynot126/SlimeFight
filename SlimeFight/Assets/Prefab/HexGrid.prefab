@@ -76,7 +76,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: -712631045867808456, guid: b670ab75dde984907b8570040daa08c5, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 8869a3f14ad0a774288e8e28234b4933, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -165,8 +165,8 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -1
-  m_Sprite: {fileID: -712631045867808456, guid: b670ab75dde984907b8570040daa08c5, type: 3}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Sprite: {fileID: 21300000, guid: 8869a3f14ad0a774288e8e28234b4933, type: 3}
+  m_Color: {r: 0.46226418, g: 0.46226418, b: 0.46226418, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -190,6 +190,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spriteRenderer: {fileID: 4810642614062140327}
   normalColor: {r: 1, g: 1, b: 1, a: 1}
-  rangeColor: {r: 0, g: 0, b: 1, a: 1}
-  validHoverColor: {r: 0, g: 1, b: 1, a: 1}
-  invalidHoverColor: {r: 1, g: 0, b: 0, a: 1}
+  rangeColor: {r: 0.84400004, g: 0.70842034, b: 0.46588802, a: 1}
+  validHoverColor: {r: 0.84313726, g: 0.57199836, b: 0.07756858, a: 1}
+  invalidHoverColor: {r: 0.26415092, g: 0.26415092, b: 0.26415092, a: 1}
