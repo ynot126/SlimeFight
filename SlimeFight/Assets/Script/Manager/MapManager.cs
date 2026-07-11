@@ -7,13 +7,13 @@ public class MapManager : MonoBehaviour
 {
     [SerializeField] int mapRadius = 4;
     [SerializeField] float hexSize = 1f;
-    [SerializeField] bool createTileVisuals = true;
-    [SerializeField] float tileLineWidth = 0.03f;
+    [SerializeField] HexGrid hexGridPrefab = null!;
 
     GameData gameData = null!;
     readonly HashSet<HexCoord> hexes = new();
     readonly Dictionary<HexCoord, int> occupants = new();
-    readonly List<GameObject> tileVisuals = new();
+    readonly Dictionary<HexCoord, HexGrid> hexGridVisuals = new();
+    readonly HashSet<HexCoord> rangeHexes = new();
     Bounds mapWorldBounds;
 
     public float HexSize => hexSize;
@@ -26,13 +26,12 @@ public class MapManager : MonoBehaviour
 
     public async UniTask CreateMap()
     {
-        ClearTileVisuals();
+        ClearHexGridVisuals();
         hexes.Clear();
         occupants.Clear();
         GenerateHexes();
         CalculateMapWorldBounds();
-        if (createTileVisuals)
-            CreateTileVisuals();
+        CreateHexGridVisuals();
         await UniTask.Yield();
     }
 
@@ -153,6 +152,30 @@ public class MapManager : MonoBehaviour
     public int GetHexDistance(HexCoord a, HexCoord b)
         => HexGridUtility.Distance(a, b);
 
+    public void ShowRange(IEnumerable<HexCoord> range)
+    {
+        ClearRange();
+
+        foreach (var hex in range)
+        {
+            if (!hexGridVisuals.TryGetValue(hex, out var hexGrid)) continue;
+
+            hexGrid.SetState(HexGridState.Range);
+            rangeHexes.Add(hex);
+        }
+    }
+
+    public void ClearRange()
+    {
+        foreach (var hex in rangeHexes)
+        {
+            if (hexGridVisuals.TryGetValue(hex, out var hexGrid))
+                hexGrid.SetState(HexGridState.Normal);
+        }
+
+        rangeHexes.Clear();
+    }
+
     void GenerateHexes()
     {
         for (var q = -mapRadius; q <= mapRadius; q++)
@@ -187,38 +210,30 @@ public class MapManager : MonoBehaviour
         mapWorldBounds = bounds;
     }
 
-    void CreateTileVisuals()
+    void CreateHexGridVisuals()
     {
         foreach (var hex in hexes)
-            tileVisuals.Add(CreateTileVisual(hex));
-    }
-
-    GameObject CreateTileVisual(HexCoord hex)
-    {
-        var tile = new GameObject($"HexTile {hex.Q},{hex.R}");
-        tile.transform.SetParent(transform, false);
-
-        var lineRenderer = tile.AddComponent<LineRenderer>();
-        lineRenderer.useWorldSpace = true;
-        lineRenderer.positionCount = 7;
-        lineRenderer.startWidth = tileLineWidth;
-        lineRenderer.endWidth = tileLineWidth;
-        lineRenderer.loop = false;
-        lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-        lineRenderer.startColor = Color.gray;
-        lineRenderer.endColor = Color.gray;
-        lineRenderer.SetPositions(HexGridUtility.GetClosedCornerPositions(HexToWorld(hex), hexSize, 0.005f));
-        return tile;
-    }
-
-    void ClearTileVisuals()
-    {
-        foreach (var tile in tileVisuals)
         {
-            if (tile != null)
-                Destroy(tile);
+            var hexGrid = Instantiate(
+                hexGridPrefab,
+                HexToWorld(hex),
+                hexGridPrefab.transform.rotation,
+                transform);
+            hexGrid.name = $"HexGrid {hex.Q},{hex.R}";
+            hexGrid.Initialize(hex, hexSize);
+            hexGridVisuals.Add(hex, hexGrid);
+        }
+    }
+
+    void ClearHexGridVisuals()
+    {
+        foreach (var hexGrid in hexGridVisuals.Values)
+        {
+            if (hexGrid != null)
+                Destroy(hexGrid.gameObject);
         }
 
-        tileVisuals.Clear();
+        hexGridVisuals.Clear();
+        rangeHexes.Clear();
     }
 }

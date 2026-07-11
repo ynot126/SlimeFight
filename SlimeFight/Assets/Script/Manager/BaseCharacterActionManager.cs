@@ -116,6 +116,7 @@ public abstract class BaseCharacterActionManager : MonoBehaviour
     {
         if (TargetSelectDisplay == null) return;
 
+        MapManager.ClearRange();
         TargetSelectDisplay.SetActionRangeIndicatorVisible(false);
     }
 }

@@ -46,5 +46,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mapRadius: 4
   hexSize: 1
-  createTileVisuals: 1
-  tileLineWidth: 0.03
+  hexGridPrefab: {fileID: 8116050183672706243, guid: 917ca82c2d2a27a4687380c7a037627d, type: 3}

@@ -29,6 +29,7 @@ public abstract class BaseTargetSelectStrategy
 
     public virtual void ShowTargetPreview()
     {
+        mapManager.ClearRange();
         characterActionDisplay.SetActionRangeIndicatorVisible(false);
     }
 }

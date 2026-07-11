@@ -82,19 +82,17 @@ public abstract class MouseTargetSelectStrategy : BaseTargetSelectStrategy
         if (!characterManager.TryGetCharacterHex(characterRunTimeId, out var characterHex))
         {
             characterActionDisplay.SetActionRangeIndicatorVisible(false);
+            mapManager.ClearRange();
             return;
         }
 
         var hexes = mapManager.GetHexesInRange(characterHex, Mathf.RoundToInt(Range));
-        var hexCenters = new List<Vector3>();
-        foreach (var hex in hexes)
-            hexCenters.Add(mapManager.HexToWorld(hex));
-
-        characterActionDisplay.SetHexRangeIndicator(hexCenters, mapManager.HexSize, true);
+        mapManager.ShowRange(hexes);
     }
 
     protected virtual void ClearTargetDisplay()
     {
+        mapManager.ClearRange();
         characterActionDisplay.Cleanup();
     }
 }
