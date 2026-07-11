@@ -1,0 +1,15 @@
+---
+description: Never commit or push changes to git
+alwaysApply: true
+---
+
+# No Git Commit or Push
+
+Do not commit or push anything to git in this project.
+
+- Never run `git commit`, `git push`, or equivalent commands.
+- Never create commits, even if the user asks you to.
+- Never push to remote, even if the user asks you to.
+- You may still use read-only git commands (e.g. `git status`, `git diff`, `git log`) when needed to inspect the repository.
+
+If the user wants changes committed or pushed, tell them to do it themselves locally.
